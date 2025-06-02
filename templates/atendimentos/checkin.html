@@ -1,0 +1,350 @@
+<!-- templates/atendimentos/checkin.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-clipboard-list me-2"></i>Novo Check-in
+                </h4>
+                <small>Iniciar novo atendimento</small>
+            </div>
+            
+            <div class="card-body p-4">
+                <form id="checkinForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="tutor_search" class="form-label">Buscar Tutor</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="tutor_search" 
+                                       placeholder="Digite nome ou CPF do tutor">
+                                <button class="btn btn-outline-secondary" type="button" id="btnBuscarTutor">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                            <div id="tutor_results" class="mt-2"></div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="pet_select" class="form-label">Pet</label>
+                            <select class="form-select" id="pet_select" name="pet_id" required disabled>
+                                <option value="">Primeiro selecione um tutor</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Informações do Tutor Selecionado -->
+                    <div id="tutor_info" class="alert alert-info" style="display: none;">
+                        <h6><i class="fas fa-user me-2"></i>Tutor Selecionado:</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong id="tutor_nome"></strong><br>
+                                <small class="text-muted">CPF: <span id="tutor_cpf"></span></small>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted">Telefone: <span id="tutor_telefone"></span></small><br>
+                                <small class="text-muted">Cidade: <span id="tutor_cidade"></span></small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Informações do Pet Selecionado -->
+                    <div id="pet_info" class="alert alert-success" style="display: none;">
+                        <h6><i class="fas fa-paw me-2"></i>Pet Selecionado:</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong id="pet_nome"></strong><br>
+                                <small class="text-muted">Espécie: <span id="pet_especie"></span></small>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">Raça: <span id="pet_raca"></span></small><br>
+                                <small class="text-muted">Porte: <span id="pet_porte"></span></small>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">Idade: <span id="pet_idade"></span></small><br>
+                                <small class="text-muted">Temperamento: <span id="pet_temperamento"></span></small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="turma_select" class="form-label">Turma *</label>
+                            <select class="form-select" id="turma_select" name="turma_id" required>
+                                <option value="">Selecionar turma</option>
+                                {% for turma in turmas %}
+                                <option value="{{ turma.id }}" data-curso="{{ turma.curso.nome }}">
+                                    {{ turma.codigo }} - {{ turma.curso.nome }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="aula_data" class="form-label">Data da Aula</label>
+                            <input type="date" class="form-control" id="aula_data" name="aula_data" 
+                                   value="{{ date.today().isoformat() }}">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="hora_checkin" class="form-label">Hora do Check-in</label>
+                            <input type="time" class="form-control" id="hora_checkin" name="hora_checkin" 
+                                   value="{{ datetime.now().strftime('%H:%M') }}">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="curso_info" class="form-label">Curso do atendimento</label>
+                            <input type="text" class="form-control" id="curso_info" readonly 
+                                   placeholder="Será preenchido automaticamente">
+                        </div>
+                    </div>
+                    
+                    <!-- Verificação de Anamnese -->
+                    <div id="anamnese_status" class="alert alert-warning" style="display: none;">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="anamnese_message"></span>
+                        <button type="button" class="btn btn-sm btn-primary ms-2" id="btnCriarAnamnese">
+                            Criar Anamnese
+                        </button>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between pt-3">
+                        <button type="button" class="btn btn-secondary btn-lg" onclick="history.back()">
+                            <i class="fas fa-arrow-left me-2"></i>Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-success btn-lg" id="btnConfirmarCheckin" disabled>
+                            <i class="fas fa-check me-2"></i>Confirmar Check-in
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Lista de Tutores -->
+<div class="modal fade" id="tutorListModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Selecionar Tutor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="list-group" id="tutorList">
+                    <!-- Lista será preenchida via JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let tutorSelecionado = null;
+let petSelecionado = null;
+
+// Buscar tutores
+$('#btnBuscarTutor, #tutor_search').on('click keypress', function(e) {
+    if (e.type === 'click' || e.which === 13) {
+        buscarTutores();
+    }
+});
+
+function buscarTutores() {
+    const termo = $('#tutor_search').val();
+    if (termo.length < 3) {
+        alert('Digite pelo menos 3 caracteres para buscar');
+        return;
+    }
+    
+    $.ajax({
+        url: '/api/tutores/buscar',
+        data: { q: termo },
+        success: function(tutores) {
+            if (tutores.length === 0) {
+                $('#tutor_results').html('<div class="alert alert-warning">Nenhum tutor encontrado</div>');
+                return;
+            }
+            
+            if (tutores.length === 1) {
+                selecionarTutor(tutores[0]);
+            } else {
+                mostrarListaTutores(tutores);
+            }
+        }
+    });
+}
+
+function mostrarListaTutores(tutores) {
+    const lista = $('#tutorList');
+    lista.empty();
+    
+    tutores.forEach(tutor => {
+        const item = $(`
+            <div class="list-group-item list-group-item-action" data-tutor-id="${tutor.id}">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="mb-1">${tutor.nome}</h6>
+                        <p class="mb-1 text-muted">CPF: ${tutor.cpf}</p>
+                        <small>Tel: ${tutor.telefone} - ${tutor.cidade}</small>
+                    </div>
+                    <span class="badge bg-primary">${tutor.pets_count} pet(s)</span>
+                </div>
+            </div>
+        `);
+        
+        item.click(() => {
+            selecionarTutor(tutor);
+            $('#tutorListModal').modal('hide');
+        });
+        
+        lista.append(item);
+    });
+    
+    $('#tutorListModal').modal('show');
+}
+
+function selecionarTutor(tutor) {
+    tutorSelecionado = tutor;
+    
+    // Preencher informações do tutor
+    $('#tutor_nome').text(tutor.nome);
+    $('#tutor_cpf').text(tutor.cpf);
+    $('#tutor_telefone').text(tutor.telefone);
+    $('#tutor_cidade').text(tutor.cidade);
+    $('#tutor_info').show();
+    
+    // Carregar pets do tutor
+    carregarPets(tutor.id);
+    
+    // Limpar resultados de busca
+    $('#tutor_results').empty();
+    $('#tutor_search').val(tutor.nome);
+}
+
+function carregarPets(tutorId) {
+    $.ajax({
+        url: `/api/pets/${tutorId}`,
+        success: function(pets) {
+            const select = $('#pet_select');
+            select.empty().prop('disabled', false);
+            
+            if (pets.length === 0) {
+                select.append('<option value="">Nenhum pet cadastrado</option>');
+                return;
+            }
+            
+            select.append('<option value="">Selecione um pet</option>');
+            pets.forEach(pet => {
+                select.append(`<option value="${pet.id}" data-pet='${JSON.stringify(pet)}'>${pet.nome} - ${pet.especie}</option>`);
+            });
+        }
+    });
+}
+
+// Seleção de pet
+$('#pet_select').change(function() {
+    const option = $(this).find('option:selected');
+    if (option.val()) {
+        const pet = JSON.parse(option.attr('data-pet'));
+        selecionarPet(pet);
+    } else {
+        $('#pet_info').hide();
+        petSelecionado = null;
+        verificarFormulario();
+    }
+});
+
+function selecionarPet(pet) {
+    petSelecionado = pet;
+    
+    $('#pet_nome').text(pet.nome);
+    $('#pet_especie').text(pet.especie);
+    $('#pet_raca').text(pet.raca || '-');
+    $('#pet_porte').text(pet.porte || '-');
+    $('#pet_idade').text(pet.idade ? pet.idade + ' anos' : '-');
+    $('#pet_temperamento').text(pet.temperamento || '-');
+    $('#pet_info').show();
+    
+    // Verificar anamnese
+    verificarAnamnese(pet.id);
+}
+
+function verificarAnamnese(petId) {
+    $.ajax({
+        url: `/api/anamnese/verificar/${petId}`,
+        success: function(response) {
+            if (!response.tem_anamnese) {
+                $('#anamnese_message').text('Este pet não possui anamnese ativa. É necessário criar uma anamnese antes do atendimento.');
+                $('#anamnese_status').show();
+                $('#btnConfirmarCheckin').prop('disabled', true);
+            } else {
+                $('#anamnese_status').hide();
+                verificarFormulario();
+            }
+        }
+    });
+}
+
+// Atualizar informações do curso
+$('#turma_select').change(function() {
+    const option = $(this).find('option:selected');
+    const curso = option.attr('data-curso');
+    $('#curso_info').val(curso || '');
+    verificarFormulario();
+});
+
+function verificarFormulario() {
+    const tutorOk = tutorSelecionado !== null;
+    const petOk = petSelecionado !== null;
+    const turmaOk = $('#turma_select').val() !== '';
+    
+    $('#btnConfirmarCheckin').prop('disabled', !(tutorOk && petOk && turmaOk));
+}
+
+// Criar anamnese
+$('#btnCriarAnamnese').click(function() {
+    if (petSelecionado) {
+        const url = `/anamnese/nova/${petSelecionado.id}?tutor_id=${tutorSelecionado.id}`;
+        window.location.href = url;
+    }
+});
+
+// Submit do formulário
+$('#checkinForm').submit(function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        pet_id: petSelecionado.id,
+        tutor_id: tutorSelecionado.id,
+        turma_id: $('#turma_select').val(),
+        aula_data: $('#aula_data').val(),
+        hora_checkin: $('#hora_checkin').val()
+    };
+    
+    $.ajax({
+        url: '{{ url_for("novo_checkin") }}',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function(response) {
+            if (response.success) {
+                alert('Check-in realizado com sucesso!');
+                window.location.href = '{{ url_for("dashboard") }}';
+            } else {
+                alert('Erro: ' + response.message);
+            }
+        },
+        error: function() {
+            alert('Erro ao realizar check-in');
+        }
+    });
+});
+</script>
+{% endblock %}

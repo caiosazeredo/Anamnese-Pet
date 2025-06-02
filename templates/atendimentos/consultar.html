@@ -1,0 +1,367 @@
+<!-- templates/atendimentos/consultar.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-search me-2"></i>Consultar Atendimentos</h2>
+        <p class="text-muted">Visualizar histórico de atendimentos</p>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label for="data_inicio" class="form-label">Data Início</label>
+                <input type="date" class="form-control" id="data_inicio" name="data_inicio" value="{{ request.args.get('data_inicio', '') }}">
+            </div>
+            
+            <div class="col-md-3">
+                <label for="data_fim" class="form-label">Data Fim</label>
+                <input type="date" class="form-control" id="data_fim" name="data_fim" value="{{ request.args.get('data_fim', '') }}">
+            </div>
+            
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">Todos os status</option>
+                    <option value="Aguardando" {% if request.args.get('status') == 'Aguardando' %}selected{% endif %}>Aguardando</option>
+                    <option value="Em Atendimento" {% if request.args.get('status') == 'Em Atendimento' %}selected{% endif %}>Em Atendimento</option>
+                    <option value="Finalizado" {% if request.args.get('status') == 'Finalizado' %}selected{% endif %}>Finalizado</option>
+                    <option value="Cancelado" {% if request.args.get('status') == 'Cancelado' %}selected{% endif %}>Cancelado</option>
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <label for="busca" class="form-label">Buscar</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="busca" name="busca" 
+                           placeholder="Pet ou tutor" value="{{ request.args.get('busca', '') }}">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de Atendimentos -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Atendimentos</h5>
+        <div class="btn-group">
+            <button class="btn btn-success btn-sm" onclick="exportarPDF()">
+                <i class="fas fa-file-pdf me-1"></i>PDF
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="atualizarLista()">
+                <i class="fas fa-sync-alt me-1"></i>Atualizar
+            </button>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>Pet</th>
+                        <th>Tutor</th>
+                        <th>Curso</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Exemplo de dados -->
+                    <tr onclick="verDetalhes(1)" style="cursor: pointer;">
+                        <td>
+                            <strong>30/01/2025</strong><br>
+                            <small class="text-muted">14:30</small>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="pet-avatar bg-primary text-white rounded-circle me-2" style="width: 30px; height: 30px; font-size: 12px;">
+                                    <i class="fas fa-paw"></i>
+                                </div>
+                                <div>
+                                    <strong>Rex</strong><br>
+                                    <small class="text-muted">Golden Retriever</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <strong>João Silva</strong><br>
+                            <small class="text-muted">(21) 99999-9999</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">Banho e Tosa</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-warning">Em Atendimento</span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="verDetalhes(1)" title="Ver detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-success" onclick="fazerCheckout(1)" title="Fazer checkout">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <tr onclick="verDetalhes(2)" style="cursor: pointer;">
+                        <td>
+                            <strong>30/01/2025</strong><br>
+                            <small class="text-muted">13:15</small>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="pet-avatar bg-success text-white rounded-circle me-2" style="width: 30px; height: 30px; font-size: 12px;">
+                                    <i class="fas fa-cat"></i>
+                                </div>
+                                <div>
+                                    <strong>Mimi</strong><br>
+                                    <small class="text-muted">Persa</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <strong>Maria Santos</strong><br>
+                            <small class="text-muted">(21) 88888-8888</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">Técnicas Avançadas</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-success">Finalizado</span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="verDetalhes(2)" title="Ver detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="imprimirTermo(2)" title="Imprimir termo">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <tr onclick="verDetalhes(3)" style="cursor: pointer;">
+                        <td>
+                            <strong>29/01/2025</strong><br>
+                            <small class="text-muted">15:45</small>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="pet-avatar bg-warning text-white rounded-circle me-2" style="width: 30px; height: 30px; font-size: 12px;">
+                                    <i class="fas fa-paw"></i>
+                                </div>
+                                <div>
+                                    <strong>Bolt</strong><br>
+                                    <small class="text-muted">Poodle</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <strong>Carlos Oliveira</strong><br>
+                            <small class="text-muted">(21) 77777-7777</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">Dog Walker</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">Aguardando</span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="verDetalhes(3)" title="Ver detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="iniciarAtendimento(3)" title="Iniciar atendimento">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Paginação -->
+        <nav aria-label="Paginação de atendimentos">
+            <ul class="pagination justify-content-center">
+                <li class="page-item disabled">
+                    <span class="page-link">Anterior</span>
+                </li>
+                <li class="page-item active">
+                    <span class="page-link">1</span>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="#">2</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="#">3</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="#">Próximo</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<div class="text-center mt-4">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-lg">
+        <i class="fas fa-arrow-left me-2"></i>Voltar ao Dashboard
+    </a>
+</div>
+
+<!-- Modal Detalhes do Atendimento -->
+<div class="modal fade" id="detalhesModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalhes do Atendimento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="detalhes-content">
+                    <!-- Conteúdo será carregado via JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" id="btnEditarAtendimento">Editar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function verDetalhes(atendimentoId) {
+    event.stopPropagation();
+    
+    // Carregar detalhes via AJAX
+    $.ajax({
+        url: `/api/atendimento/${atendimentoId}`,
+        success: function(data) {
+            const content = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Informações do Pet</h6>
+                        <p><strong>Nome:</strong> ${data.pet.nome}</p>
+                        <p><strong>Espécie:</strong> ${data.pet.especie}</p>
+                        <p><strong>Raça:</strong> ${data.pet.raca || '-'}</p>
+                        <p><strong>Porte:</strong> ${data.pet.porte || '-'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Informações do Tutor</h6>
+                        <p><strong>Nome:</strong> ${data.tutor.nome}</p>
+                        <p><strong>CPF:</strong> ${data.tutor.cpf}</p>
+                        <p><strong>Telefone:</strong> ${data.tutor.telefone}</p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Dados do Atendimento</h6>
+                        <p><strong>Check-in:</strong> ${data.data_checkin}</p>
+                        <p><strong>Check-out:</strong> ${data.data_checkout || 'Não realizado'}</p>
+                        <p><strong>Status:</strong> <span class="badge bg-${getStatusColor(data.status)}">${data.status}</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Curso/Turma</h6>
+                        <p><strong>Curso:</strong> ${data.curso.nome}</p>
+                        <p><strong>Turma:</strong> ${data.turma.codigo}</p>
+                        <p><strong>Instrutor:</strong> ${data.instrutor.nome}</p>
+                    </div>
+                </div>
+                
+                ${data.observacoes_dia ? `
+                <hr>
+                <h6>Observações</h6>
+                <p>${data.observacoes_dia}</p>
+                ` : ''}
+                
+                ${data.procedimentos && data.procedimentos.length > 0 ? `
+                <hr>
+                <h6>Procedimentos Realizados</h6>
+                <ul>
+                    ${data.procedimentos.map(p => `<li>${p.nome}</li>`).join('')}
+                </ul>
+                ` : ''}
+            `;
+            
+            $('#detalhes-content').html(content);
+            $('#detalhesModal').modal('show');
+        }
+    });
+}
+
+function getStatusColor(status) {
+    const colors = {
+        'Aguardando': 'info',
+        'Em Atendimento': 'warning',
+        'Finalizado': 'success',
+        'Cancelado': 'danger'
+    };
+    return colors[status] || 'secondary';
+}
+
+function fazerCheckout(atendimentoId) {
+    event.stopPropagation();
+    window.location.href = `/checkout/${atendimentoId}`;
+}
+
+function iniciarAtendimento(atendimentoId) {
+    event.stopPropagation();
+    
+    if (confirm('Deseja iniciar este atendimento?')) {
+        $.ajax({
+            url: `/api/atendimento/${atendimentoId}/iniciar`,
+            type: 'POST',
+            success: function() {
+                alert('Atendimento iniciado!');
+                location.reload();
+            }
+        });
+    }
+}
+
+function imprimirTermo(atendimentoId) {
+    event.stopPropagation();
+    window.open(`/atendimento/${atendimentoId}/termo`, '_blank');
+}
+
+function exportarPDF() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('formato', 'pdf');
+    window.open('?' + params.toString(), '_blank');
+}
+
+function atualizarLista() {
+    location.reload();
+}
+
+// Auto-refresh a cada 30 segundos para atendimentos em andamento
+setInterval(function() {
+    const url = new URL(window.location);
+    const status = url.searchParams.get('status');
+    
+    if (!status || status === 'Em Atendimento' || status === 'Aguardando') {
+        atualizarLista();
+    }
+}, 30000);
+</script>
+{% endblock %>

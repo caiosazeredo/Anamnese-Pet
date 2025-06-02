@@ -1,0 +1,296 @@
+<!-- templates/atendimentos/checkout.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-check-circle me-2"></i>Checkout - {{ atendimento.pet.nome }}
+                </h4>
+                <small>Tutor: {{ atendimento.tutor.nome }}</small>
+            </div>
+            
+            <div class="card-body p-4">
+                <form id="checkoutForm">
+                    <!-- Procedimentos Realizados -->
+                    <div class="mb-4">
+                        <h5>Procedimentos Realizados</h5>
+                        <div class="row">
+                            {% for procedimento in procedimentos %}
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" 
+                                           id="proc_{{ procedimento.id }}" 
+                                           name="procedimentos" 
+                                           value="{{ procedimento.id }}">
+                                    <label class="form-check-label" for="proc_{{ procedimento.id }}">
+                                        {{ procedimento.nome }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Intercorrências -->
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="nao_intercorrencia" checked>
+                            <label class="form-check-label" for="nao_intercorrencia">
+                                <strong>Não houve intercorrência</strong>
+                            </label>
+                        </div>
+                        
+                        <div id="intercorrencia_details" style="display: none;" class="mt-3">
+                            <label for="obs_intercorrencia" class="form-label">Descreva a intercorrência:</label>
+                            <textarea class="form-control" id="obs_intercorrencia" name="obs_intercorrencia" rows="3"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Observações do Dia -->
+                    <div class="mb-4">
+                        <label for="observacoes_dia" class="form-label">Observações do dia (pelo, pele, presença de lesões, parasitas externos, comportamento do pet):</label>
+                        <textarea class="form-control" id="observacoes_dia" name="observacoes_dia" rows="4"></textarea>
+                    </div>
+                    
+                    <!-- Seleção de Alunos -->
+                    <div class="mb-4">
+                        <h5>Alunos que atenderam (até 3)</h5>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="aluno1" class="form-label">Aluno 1</label>
+                                <select class="form-select" id="aluno1" name="aluno1">
+                                    <option value="">Selecionar aluno</option>
+                                    {% for aluno in alunos_turma %}
+                                    <option value="{{ aluno.id }}">{{ aluno.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="aluno2" class="form-label">Aluno 2</label>
+                                <select class="form-select" id="aluno2" name="aluno2">
+                                    <option value="">Selecionar aluno</option>
+                                    {% for aluno in alunos_turma %}
+                                    <option value="{{ aluno.id }}">{{ aluno.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="aluno3" class="form-label">Aluno 3</label>
+                                <select class="form-select" id="aluno3" name="aluno3">
+                                    <option value="">Selecionar aluno</option>
+                                    {% for aluno in alunos_turma %}
+                                    <option value="{{ aluno.id }}">{{ aluno.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Assinaturas -->
+                    <div class="mb-4">
+                        <h5>Assinaturas</h5>
+                        
+                        <!-- Assinatura Aluno 1 -->
+                        <div id="assinatura_aluno1_container" style="display: none;">
+                            <label class="form-label">Assinatura do Aluno 1:</label>
+                            <div class="signature-container">
+                                <canvas id="signature_aluno1" class="signature-pad" width="400" height="150"></canvas>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary mb-3" onclick="clearSignature('aluno1')">
+                                Limpar Assinatura
+                            </button>
+                        </div>
+                        
+                        <!-- Assinatura Aluno 2 -->
+                        <div id="assinatura_aluno2_container" style="display: none;">
+                            <label class="form-label">Assinatura do Aluno 2:</label>
+                            <div class="signature-container">
+                                <canvas id="signature_aluno2" class="signature-pad" width="400" height="150"></canvas>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary mb-3" onclick="clearSignature('aluno2')">
+                                Limpar Assinatura
+                            </button>
+                        </div>
+                        
+                        <!-- Assinatura Aluno 3 -->
+                        <div id="assinatura_aluno3_container" style="display: none;">
+                            <label class="form-label">Assinatura do Aluno 3:</label>
+                            <div class="signature-container">
+                                <canvas id="signature_aluno3" class="signature-pad" width="400" height="150"></canvas>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary mb-3" onclick="clearSignature('aluno3')">
+                                Limpar Assinatura
+                            </button>
+                        </div>
+                        
+                        <!-- Assinatura do Tutor -->
+                        <div class="mt-3">
+                            <label class="form-label">
+                                <strong>Assinatura do responsável do Pet:</strong><br>
+                                <small class="text-muted">Recebi meu animal em perfeitas condições</small>
+                            </label>
+                            <div class="signature-container">
+                                <canvas id="signature_tutor" class="signature-pad" width="400" height="150"></canvas>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary mb-3" onclick="clearSignature('tutor')">
+                                Limpar Assinatura
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between pt-3">
+                        <button type="button" class="btn btn-secondary btn-lg" onclick="history.back()">
+                            <i class="fas fa-arrow-left me-2"></i>Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-check me-2"></i>Finalizar Atendimento
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Signature Pads
+const signaturePads = {};
+
+// Inicializar signature pads
+function initSignaturePad(id) {
+    const canvas = document.getElementById('signature_' + id);
+    if (canvas) {
+        signaturePads[id] = new SignaturePad(canvas, {
+            backgroundColor: 'rgb(255, 255, 255)',
+            penColor: 'rgb(0, 0, 0)'
+        });
+        
+        // Redimensionar
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        canvas.getContext("2d").scale(ratio, ratio);
+    }
+}
+
+// Limpar assinatura
+function clearSignature(id) {
+    if (signaturePads[id]) {
+        signaturePads[id].clear();
+    }
+}
+
+// Controle de intercorrências
+$('#nao_intercorrencia').change(function() {
+    if (this.checked) {
+        $('#intercorrencia_details').hide();
+    } else {
+        $('#intercorrencia_details').show();
+    }
+});
+
+// Mostrar/ocultar campos de assinatura baseado na seleção de alunos
+$('#aluno1').change(function() {
+    if (this.value) {
+        $('#assinatura_aluno1_container').show();
+        initSignaturePad('aluno1');
+    } else {
+        $('#assinatura_aluno1_container').hide();
+    }
+});
+
+$('#aluno2').change(function() {
+    if (this.value) {
+        $('#assinatura_aluno2_container').show();
+        initSignaturePad('aluno2');
+    } else {
+        $('#assinatura_aluno2_container').hide();
+    }
+});
+
+$('#aluno3').change(function() {
+    if (this.value) {
+        $('#assinatura_aluno3_container').show();
+        initSignaturePad('aluno3');
+    } else {
+        $('#assinatura_aluno3_container').hide();
+    }
+});
+
+// Inicializar assinatura do tutor
+$(document).ready(function() {
+    initSignaturePad('tutor');
+});
+
+// Submit do formulário
+$('#checkoutForm').submit(function(e) {
+    e.preventDefault();
+    
+    // Validar assinatura do tutor
+    if (signaturePads.tutor && signaturePads.tutor.isEmpty()) {
+        alert('A assinatura do tutor é obrigatória!');
+        return;
+    }
+    
+    // Coletar dados
+    const formData = {
+        intercorrencia: !$('#nao_intercorrencia').is(':checked'),
+        observacoes_intercorrencia: $('#obs_intercorrencia').val(),
+        observacoes_dia: $('#observacoes_dia').val(),
+        procedimentos: []
+    };
+    
+    // Procedimentos realizados
+    $('input[name="procedimentos"]:checked').each(function() {
+        formData.procedimentos.push({
+            id: parseInt(this.value),
+            realizado: true
+        });
+    });
+    
+    // Assinaturas
+    formData.assinatura_tutor = signaturePads.tutor.toDataURL();
+    
+    if ($('#aluno1').val()) {
+        formData.nome_aluno1 = $('#aluno1 option:selected').text();
+        formData.assinatura_aluno1 = signaturePads.aluno1 ? signaturePads.aluno1.toDataURL() : null;
+    }
+    
+    if ($('#aluno2').val()) {
+        formData.nome_aluno2 = $('#aluno2 option:selected').text();
+        formData.assinatura_aluno2 = signaturePads.aluno2 ? signaturePads.aluno2.toDataURL() : null;
+    }
+    
+    if ($('#aluno3').val()) {
+        formData.nome_aluno3 = $('#aluno3 option:selected').text();
+        formData.assinatura_aluno3 = signaturePads.aluno3 ? signaturePads.aluno3.toDataURL() : null;
+    }
+    
+    // Enviar dados
+    $.ajax({
+        url: '{{ url_for("checkout", atendimento_id=atendimento.id) }}',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function(response) {
+            if (response.success) {
+                alert('Atendimento finalizado com sucesso!');
+                window.location.href = '{{ url_for("dashboard") }}';
+            } else {
+                alert('Erro ao finalizar atendimento');
+            }
+        },
+        error: function() {
+            alert('Erro ao processar dados');
+        }
+    });
+});
+</script>
+{% endblock %>

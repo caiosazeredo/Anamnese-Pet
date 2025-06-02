@@ -1,0 +1,256 @@
+<!-- templates/dashboard_stats.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Dashboard com Estatísticas Avançadas -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-chart-line me-2"></i>Dashboard Estatísticas</h2>
+        <p class="text-muted">Visão geral detalhada do sistema</p>
+    </div>
+</div>
+
+<!-- Cards de Estatísticas -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card h-100 border-start border-primary border-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 class="text-primary">{{ stats.total_atendimentos_mes }}</h3>
+                        <p class="mb-0">Atendimentos Este Mês</p>
+                        <small class="text-muted">
+                            {% if stats.crescimento_mes > 0 %}
+                                <i class="fas fa-arrow-up text-success"></i> +{{ stats.crescimento_mes }}%
+                            {% else %}
+                                <i class="fas fa-arrow-down text-danger"></i> {{ stats.crescimento_mes }}%
+                            {% endif %}
+                        </small>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calendar-check fa-2x text-primary opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card h-100 border-start border-success border-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 class="text-success">{{ stats.pets_ativos }}</h3>
+                        <p class="mb-0">Pets Ativos</p>
+                        <small class="text-muted">{{ stats.novos_pets_semana }} novos esta semana</small>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-paw fa-2x text-success opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card h-100 border-start border-warning border-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 class="text-warning">{{ stats.turmas_ativas }}</h3>
+                        <p class="mb-0">Turmas em Andamento</p>
+                        <small class="text-muted">{{ stats.alunos_matriculados }} alunos matriculados</small>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-graduation-cap fa-2x text-warning opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card h-100 border-start border-info border-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h3 class="text-info">{{ stats.media_satisfacao }}%</h3>
+                        <p class="mb-0">Satisfação Geral</p>
+                        <small class="text-muted">Base: {{ stats.total_avaliacoes }} avaliações</small>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-star fa-2x text-info opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos e Tabelas -->
+<div class="row">
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Atendimentos por Semana</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="atendimentosChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-pie-chart me-2"></i>Distribuição por Espécie</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="especiesChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Top 5 Raças Mais Atendidas</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Posição</th>
+                                <th>Raça</th>
+                                <th>Atendimentos</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for raca in stats.top_racas %}
+                            <tr>
+                                <td>
+                                    {% if loop.index == 1 %}🥇
+                                    {% elif loop.index == 2 %}🥈
+                                    {% elif loop.index == 3 %}🥉
+                                    {% else %}{{ loop.index }}{% endif %}
+                                </td>
+                                <td>{{ raca.nome }}</td>
+                                <td>{{ raca.total }}</td>
+                                <td>{{ raca.percentual }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Atendimentos Recentes</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    {% for atendimento in stats.atendimentos_recentes %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">{{ atendimento.pet.nome }}</h6>
+                            <p class="mb-1 text-muted">{{ atendimento.tutor.nome }}</p>
+                            <small class="text-muted">
+                                {{ atendimento.data_checkin.strftime('%d/%m/%Y %H:%M') }}
+                                - {{ atendimento.turma.curso.nome }}
+                            </small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -35px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #339af0;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 2px #339af0;
+}
+
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: -30px;
+    top: 17px;
+    width: 2px;
+    height: calc(100% + 10px);
+    background-color: #dee2e6;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Gráfico de Atendimentos
+const ctxAtendimentos = document.getElementById('atendimentosChart').getContext('2d');
+new Chart(ctxAtendimentos, {
+    type: 'line',
+    data: {
+        labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
+        datasets: [{
+            label: 'Atendimentos',
+            data: [12, 19, 15, 25],
+            borderColor: '#339af0',
+            backgroundColor: 'rgba(51, 154, 240, 0.1)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+// Gráfico de Espécies
+const ctxEspecies = document.getElementById('especiesChart').getContext('2d');
+new Chart(ctxEspecies, {
+    type: 'doughnut',
+    data: {
+        labels: ['Canino', 'Felino', 'Outros'],
+        datasets: [{
+            data: [65, 30, 5],
+            backgroundColor: ['#339af0', '#51cf66', '#ffd43b']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true
+    }
+});
+</script>
+{% endblock %}

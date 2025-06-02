@@ -1,0 +1,24 @@
+<!-- templates/index.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <div class="card">
+            <div class="card-body py-5">
+                <div class="pet-icon mx-auto mb-4" style="width: 80px; height: 80px; font-size: 40px;">
+                    <i class="fas fa-paw"></i>
+                </div>
+                <h1 class="card-title mb-4">PetAnamnese</h1>
+                <p class="card-text text-muted mb-4">Sistema de gerenciamento de atendimentos para pets em cursos do SENAC</p>
+                
+                <div class="d-grid gap-2 col-md-6 mx-auto">
+                    <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Entrar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

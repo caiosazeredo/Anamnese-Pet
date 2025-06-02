@@ -1,0 +1,204 @@
+<!-- templates/anamnese/form.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step completed">1</div>
+            <div class="step completed">2</div>
+            <div class="step active">3</div>
+            <div class="step-title text-center mt-2">
+                <small>Anamnese</small>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-body p-4">
+                <form id="anamneseForm">
+                    <!-- Seção 1: Dados gerais -->
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="pet_atendido" class="form-label">Pet a ser atendido</label>
+                            <select class="form-select" id="pet_atendido" name="pet_atendido" required>
+                                <option value="">Selecionar Pet</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="alergia" class="form-label">Alergia?</label>
+                            <select class="form-select" id="alergia" name="alergia">
+                                <option value="">Selecionar</option>
+                                <option value="true">Sim</option>
+                                <option value="false">Não</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="curso_atendimento" class="form-label">Curso do atendimento</label>
+                            <select class="form-select" id="curso_atendimento" name="curso_atendimento">
+                                <option value="">Selecionar</option>
+                                <option value="banho_tosa">Banho e Tosa</option>
+                                <option value="tecnicas_avancadas">Técnicas Avançadas de Tosa</option>
+                                <option value="adestramento">Adestramento</option>
+                                <option value="dog_walker">Dog Walker</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="cirurgia_recente" class="form-label">Passou por alguma cirurgia recente?</label>
+                            <select class="form-select" id="cirurgia_recente" name="cirurgia_recente">
+                                <option value="">Selecionar</option>
+                                <option value="true">Sim</option>
+                                <option value="false">Não</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="pode_cortar_unha" class="form-label">Pode cortar unha?</label>
+                            <select class="form-select" id="pode_cortar_unha" name="pode_cortar_unha">
+                                <option value="">Selecionar</option>
+                                <option value="true">Sim</option>
+                                <option value="false">Não</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="pode_perfume" class="form-label">Pode usar perfume?</label>
+                            <select class="form-select" id="pode_perfume" name="pode_perfume">
+                                <option value="">Selecionar</option>
+                                <option value="true">Sim</option>
+                                <option value="false">Não</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="sofre_convulsao" class="form-label">Sofre Convulsão?</label>
+                            <select class="form-select" id="sofre_convulsao" name="sofre_convulsao">
+                                <option value="">Selecionar</option>
+                                <option value="true">Sim</option>
+                                <option value="false">Não</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="problema_cardiorespiatorio" class="form-label">Tem problema cardiorrespiratório?</label>
+                            <select class="form-select" id="problema_cardiorespiatorio" name="problema_cardiorespiatorio">
+                                <option value="">Selecionar</option>
+                                <option value="true">Sim</option>
+                                <option value="false">Não</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="pulga_carrapato" class="form-label">Tem pulga ou carrapato?</label>
+                            <select class="form-select" id="pulga_carrapato" name="pulga_carrapato">
+                                <option value="">Selecionar</option>
+                                <option value="true">Sim</option>
+                                <option value="false">Não</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="problema_articular" class="form-label">Tem problema articular?</label>
+                            <select class="form-select" id="problema_articular" name="problema_articular">
+                                <option value="">Selecionar</option>
+                                <option value="true">Sim</option>
+                                <option value="false">Não</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-8 mb-3">
+                            <label for="data_horario_checkin" class="form-label">Dia e Horário do Check-in</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <input type="date" class="form-control" id="data_checkin" name="data_checkin">
+                                </div>
+                                <div class="col-3">
+                                    <input type="time" class="form-control" id="hora_checkin" name="hora_checkin" value="00">
+                                </div>
+                                <div class="col-3">
+                                    <input type="time" class="form-control" id="minuto_checkin" name="minuto_checkin" value="00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="pode_limpar_ouvido" class="form-label">Pode limpar o ouvido?</label>
+                            <select class="form-select" id="pode_limpar_ouvido" name="pode_limpar_ouvido">
+                                <option value="">Selecionar</option>
+                                <option value="true">Sim</option>
+                                <option value="false">Não</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="vacinado" class="form-label">Vacinado com múltipla e antirrábica</label>
+                            <select class="form-select" id="vacinado" name="vacinado">
+                                <option value="">Selecionar</option>
+                                <option value="true">Sim</option>
+                                <option value="false">Não</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Observações -->
+                    <div class="mb-3">
+                        <label for="observacoes_checkin" class="form-label">Observações - Check-in</label>
+                        <textarea class="form-control" id="observacoes_checkin" name="observacoes_checkin" rows="4" 
+                                  style="background: #f8f9fa; min-height: 120px;"></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between pt-3">
+                        <button type="button" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-arrow-left me-2"></i>Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-arrow-right me-2"></i>Próximo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Definir data atual
+$('#data_checkin').val(new Date().toISOString().split('T')[0]);
+
+$('#anamneseForm').submit(function(e) {
+    e.preventDefault();
+    
+    // Processar dados do formulário
+    const formData = {
+        pet_id: $('#pet_atendido').val(),
+        alergia: $('#alergia').val() === 'true',
+        pode_perfume: $('#pode_perfume').val() === 'true',
+        pode_limpar_ouvido: $('#pode_limpar_ouvido').val() === 'true',
+        pode_cortar_unha: $('#pode_cortar_unha').val() === 'true',
+        problema_cardiorespiatorio: $('#problema_cardiorespiatorio').val() === 'true',
+        pulga_carrapato: $('#pulga_carrapato').val() === 'true',
+        sofre_convulsao: $('#sofre_convulsao').val() === 'true',
+        problema_articular: $('#problema_articular').val() === 'true',
+        cirurgia_recente: $('#cirurgia_recente').val() === 'true',
+        vacinado_multipla_antirrabica: $('#vacinado').val() === 'true',
+        observacoes_gerais: $('#observacoes_checkin').val()
+    };
+    
+    // Redirecionar para termo de ciência
+    window.location.href = '/termo-ciencia';
+});
+</script>
+{% endblock %>

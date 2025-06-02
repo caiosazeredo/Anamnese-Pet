@@ -1,0 +1,110 @@
+<!-- templates/tutores/form.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step active">1</div>
+            <div class="step-title text-center mt-2">
+                <small>Dados do Tutor</small>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-body p-4">
+                <form id="tutorForm">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="nome" class="form-label">Nome Completo *</label>
+                            <input type="text" class="form-control" id="nome" name="nome" required>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="cpf" class="form-label">CPF *</label>
+                            <input type="text" class="form-control" id="cpf" name="cpf" placeholder="000.000.000-00" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="endereco" class="form-label">Endereço *</label>
+                            <input type="text" class="form-control" id="endereco" name="endereco" required>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="bairro" class="form-label">Bairro *</label>
+                            <input type="text" class="form-control" id="bairro" name="bairro" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="telefone" class="form-label">Telefone *</label>
+                            <input type="tel" class="form-control" id="telefone" name="telefone" placeholder="(21) 99999-9999" required>
+                        </div>
+                        
+                        <div class="col-md-8 mb-3">
+                            <label for="cidade" class="form-label">Cidade *</label>
+                            <input type="text" class="form-control" id="cidade" name="cidade" required>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between pt-3">
+                        <button type="button" class="btn btn-secondary btn-lg" onclick="history.back()">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-check me-2"></i>Confirmar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$('#tutorForm').submit(function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        nome: $('#nome').val(),
+        cpf: $('#cpf').val(),
+        endereco: $('#endereco').val(),
+        bairro: $('#bairro').val(),
+        cidade: $('#cidade').val(),
+        telefone: $('#telefone').val()
+    };
+    
+    $.ajax({
+        url: '{{ url_for("cadastrar_tutor") }}',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function(response) {
+            if (response.success) {
+                alert('Tutor cadastrado com sucesso!');
+                window.location.href = '{{ url_for("dashboard") }}';
+            } else {
+                alert('Erro: ' + response.message);
+            }
+        },
+        error: function() {
+            alert('Erro ao cadastrar tutor');
+        }
+    });
+});
+
+// Máscaras
+$('#cpf').mask('000.000.000-00');
+$('#telefone').mask('(00) 00000-0000');
+</script>
+
+<!-- Adicionar jQuery Mask Plugin -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+{% endblock %}
+

@@ -1,0 +1,286 @@
+<!-- templates/pets/gerenciar.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-paw me-2"></i>Gerenciar Pets</h2>
+        <p class="text-muted">Informações dos Pets</p>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <input type="text" class="form-control" name="search" placeholder="Nome do pet ou tutor" value="{{ request.args.get('search', '') }}">
+            </div>
+            
+            <div class="col-md-2">
+                <select class="form-select" name="especie">
+                    <option value="">Todas espécies</option>
+                    <option value="Canino" {% if request.args.get('especie') == 'Canino' %}selected{% endif %}>Canino</option>
+                    <option value="Felino" {% if request.args.get('especie') == 'Felino' %}selected{% endif %}>Felino</option>
+                    <option value="Outros" {% if request.args.get('especie') == 'Outros' %}selected{% endif %}>Outros</option>
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <select class="form-select" name="porte">
+                    <option value="">Todos portes</option>
+                    <option value="Pequeno" {% if request.args.get('porte') == 'Pequeno' %}selected{% endif %}>Pequeno</option>
+                    <option value="Médio" {% if request.args.get('porte') == 'Médio' %}selected{% endif %}>Médio</option>
+                    <option value="Grande" {% if request.args.get('porte') == 'Grande' %}selected{% endif %}>Grande</option>
+                    <option value="Gigante" {% if request.args.get('porte') == 'Gigante' %}selected{% endif %}>Gigante</option>
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <input type="text" class="form-control" name="raca" placeholder="Raça" value="{{ request.args.get('raca', '') }}">
+            </div>
+            
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-2"></i>Buscar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de Pets -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Pets Cadastrados</h5>
+        <a href="{{ url_for('cadastrar_pet') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Cadastrar Pet
+        </a>
+    </div>
+    
+    <div class="card-body">
+        <div class="row">
+            <!-- Card exemplo de pet -->
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="pet-avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                <i class="fas fa-paw"></i>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="editarPet(1)">
+                                        <i class="fas fa-edit me-2"></i>Editar
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="verHistorico(1)">
+                                        <i class="fas fa-history me-2"></i>Histórico
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="#" onclick="deletarPet(1)">
+                                        <i class="fas fa-trash me-2"></i>Remover
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <h6 class="card-title">Rex</h6>
+                        <p class="card-text text-muted mb-2">
+                            <small>
+                                <i class="fas fa-user me-1"></i>João Silva<br>
+                                <i class="fas fa-phone me-1"></i>(21) 99999-9999
+                            </small>
+                        </p>
+                        
+                        <div class="mb-2">
+                            <span class="badge bg-primary me-1">Canino</span>
+                            <span class="badge bg-secondary me-1">Grande</span>
+                            <span class="badge bg-info">Golden Retriever</span>
+                        </div>
+                        
+                        <div class="small text-muted">
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>Idade:</strong> 3 anos
+                                </div>
+                                <div class="col-6">
+                                    <strong>Cor:</strong> Dourado
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>Pelagem:</strong> Longa
+                                </div>
+                                <div class="col-6">
+                                    <strong>Temperamento:</strong> Manso
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span><i class="fas fa-calendar me-1"></i>Último atendimento: 15/01/2025</span>
+                            <span class="badge bg-success">Ativo</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Repetir para outros pets... -->
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="pet-avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                <i class="fas fa-cat"></i>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="editarPet(2)">
+                                        <i class="fas fa-edit me-2"></i>Editar
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="verHistorico(2)">
+                                        <i class="fas fa-history me-2"></i>Histórico
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="#" onclick="deletarPet(2)">
+                                        <i class="fas fa-trash me-2"></i>Remover
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <h6 class="card-title">Mimi</h6>
+                        <p class="card-text text-muted mb-2">
+                            <small>
+                                <i class="fas fa-user me-1"></i>Maria Santos<br>
+                                <i class="fas fa-phone me-1"></i>(21) 88888-8888
+                            </small>
+                        </p>
+                        
+                        <div class="mb-2">
+                            <span class="badge bg-success me-1">Felino</span>
+                            <span class="badge bg-secondary me-1">Pequeno</span>
+                            <span class="badge bg-info">Persa</span>
+                        </div>
+                        
+                        <div class="small text-muted">
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>Idade:</strong> 2 anos
+                                </div>
+                                <div class="col-6">
+                                    <strong>Cor:</strong> Branco
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>Pelagem:</strong> Longa
+                                </div>
+                                <div class="col-6">
+                                    <strong>Temperamento:</strong> Tímido
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span><i class="fas fa-calendar me-1"></i>Último atendimento: 10/01/2025</span>
+                            <span class="badge bg-success">Ativo</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Paginação -->
+        <div class="text-center mt-4">
+            <p class="text-muted">Mostrando 2 de 2 pets</p>
+        </div>
+    </div>
+</div>
+
+<div class="text-center mt-4">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-lg">
+        <i class="fas fa-arrow-left me-2"></i>Voltar ao Dashboard
+    </a>
+</div>
+
+<!-- Modal Histórico do Pet -->
+<div class="modal fade" id="historicoModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Histórico de Atendimentos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Curso</th>
+                                <th>Procedimentos</th>
+                                <th>Alunos</th>
+                                <th>Observações</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>15/01/2025</td>
+                                <td>Banho e Tosa</td>
+                                <td>Banho, Tosa, Corte de unha</td>
+                                <td>Ana Silva, João Santos</td>
+                                <td>Animal muito colaborativo</td>
+                                <td><span class="badge bg-success">Finalizado</span></td>
+                            </tr>
+                            <tr>
+                                <td>10/01/2025</td>
+                                <td>Técnicas Avançadas</td>
+                                <td>Banho, Tosa estilizada</td>
+                                <td>Maria Costa</td>
+                                <td>Primeira vez no laboratório</td>
+                                <td><span class="badge bg-success">Finalizado</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function editarPet(id) {
+    // Implementar edição de pet
+    alert('Funcionalidade de edição será implementada');
+}
+
+function verHistorico(id) {
+    // Carregar histórico do pet
+    $('#historicoModal').modal('show');
+}
+
+function deletarPet(id) {
+    if (confirm('Tem certeza que deseja remover este pet?')) {
+        // Implementar remoção
+        alert('Pet removido com sucesso!');
+    }
+}
+</script>
+{% endblock %>

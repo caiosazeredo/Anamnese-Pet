@@ -1,0 +1,76 @@
+<!-- templates/termo/ciencia.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step completed">1</div>
+            <div class="step completed">2</div>
+            <div class="step active">3</div>
+            <div class="step-title text-center mt-2">
+                <small>Termo de ciência</small>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-body p-4">
+                <h4 class="text-center mb-4">Termo de Ciência e Responsabilidade</h4>
+                
+                <div class="termo-content" style="max-height: 400px; overflow-y: auto; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <p>O serviço de banho e tosa para cães e gatos, oferecido gratuitamente pelo Senac RJ, será executado por pessoas em processo de aprendizagem, sob supervisão de um docente responsável.</p>
+                    
+                    <p>O Senac RJ não garante a perfeição do serviço executado.</p>
+                    
+                    <p>O serviço somente será prestado após o preenchimento da anamnese do pet, assinatura do presente Termo de Ciência e Concordância e Termo de Responsabilidade e análise e autorização do docente responsável pela aula ministrada no dia.</p>
+                    
+                    <p>O Pet deve ter até 13 anos de idades, deve ser saudável e não deve portar cardiopatia sem tratamento, não deve ser sofrer de quadros convulsivos, devem ser mansos e estar acostumados ao barulho dos equipamentos de secagem dos pelos.</p>
+                    
+                    <p>Todos os pets deverão estar com coleira e guia durante todo o atendimento e não poderão circular soltos pela unidade.</p>
+                    
+                    <p>Animais considerados de raças ferozes, de acordo com a legislação, ou que possuam comportamento agressivo, deverão circular e permanecer com focinheira durante todo o atendimento.</p>
+                    
+                    <p>O tipo de serviço oferecida no dia será de acordo com a aula ministrada no mesmo dia, não sendo permitido escolher ou determinar outro serviço.</p>
+                    
+                    <p>O serviço deve ser sinalizado abaixo.</p>
+                    
+                    <p>Não é permitida a permanência de tutores no Lab Pet, salvo exceções.</p>
+                    
+                    <p>O Senac Rio não se responsabiliza por eventuais acidentes causados por negligência do participante ou por não observar as orientações do docente/supervisor da aula prática.</p>
+                    
+                    <p>Declaro serem verídicas as informações por mim descritas neste documento, sendo assim de minha inteira responsabilidade e me comprometo a informar qualquer tipo de alteração que possa vir a ocorrer.</p>
+                    
+                    <p>O Senac está oferecendo à comunidade o serviço de Banho e Tosa para Cães e Gatos. Para beneficiar-se deste serviço, você deve autorizá-lo, pois ele não será executado por profissionais e sim por pessoas em processo de aprendizagem, com a supervisão de um instrutor (a) técnico (a) responsável e que não garante a perfeição do serviço executado.</p>
+                    
+                    <p>Declaro serem verídicas as informações por mim descritas na ficha de anamnese do animal, sendo assim de minha inteira responsabilidade e me comprometo a informar qualquer tipo de alteração que possa vir a ocorrer. Caso seja verificada a necessidade, fica o responsável obrigado a permanecer ao lado do animal durante a execução do serviço, e procurar o serviço médico-veterinário, de sua preferência, caso o instrutor (a) técnico (a) indique.</p>
+                </div>
+                
+                <div class="form-check mb-4">
+                    <input class="form-check-input" type="checkbox" id="aceiteTermos" required>
+                    <label class="form-check-label" for="aceiteTermos">
+                        <strong>Declaro que li e concordo com os termos, que as informações descritas na Anamnese são verdadeiras e autorizo o uso de imagem do meu animal para fins didáticos e de divulgação</strong>
+                    </label>
+                </div>
+                
+                <div class="d-flex justify-content-between pt-3">
+                    <button type="button" class="btn btn-secondary btn-lg" onclick="history.back()">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                    </button>
+                    <button type="button" class="btn btn-primary btn-lg" id="btnProximo" disabled onclick="window.location.href='/assinatura-tutor'">
+                        <i class="fas fa-arrow-right me-2"></i>Próximo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$('#aceiteTermos').change(function() {
+    $('#btnProximo').prop('disabled', !this.checked);
+});
+</script>
+{% endblock %}

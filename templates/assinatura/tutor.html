@@ -1,0 +1,107 @@
+<!-- templates/assinatura/tutor.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step completed">1</div>
+            <div class="step completed">2</div>
+            <div class="step active">3</div>
+            <div class="step-title text-center mt-2">
+                <small>Observações e assinaturas</small>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <p class="mb-2">Declaro que li e concordo com os termos, que as informações descritas na Anamnese são verdadeiras e autorizo o uso de imagem do meu animal para fins didáticos e de divulgação</p>
+                </div>
+                
+                <h5 class="mb-3">Assinatura Do tutor:</h5>
+                
+                <div class="signature-container">
+                    <canvas id="signature-pad" class="signature-pad" width="400" height="200"></canvas>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <button type="button" class="btn btn-outline-secondary" id="clear-signature">
+                        <i class="fas fa-eraser me-2"></i>Limpar
+                    </button>
+                    <button type="button" class="btn btn-success" id="confirm-signature">
+                        <i class="fas fa-check me-2"></i>Confirmar assinatura
+                    </button>
+                </div>
+                
+                <div class="d-flex justify-content-between pt-3">
+                    <button type="button" class="btn btn-secondary btn-lg" onclick="history.back()">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                    </button>
+                    <button type="button" class="btn btn-primary btn-lg" id="btnEnviar" disabled>
+                        <i class="fas fa-paper-plane me-2"></i>Enviar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Configuração do Signature Pad
+const canvas = document.getElementById('signature-pad');
+const signaturePad = new SignaturePad(canvas, {
+    backgroundColor: 'rgb(255, 255, 255)',
+    penColor: 'rgb(0, 0, 0)'
+});
+
+// Redimensionar canvas para dispositivos touch
+function resizeCanvas() {
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    canvas.width = canvas.offsetWidth * ratio;
+    canvas.height = canvas.offsetHeight * ratio;
+    canvas.getContext("2d").scale(ratio, ratio);
+    signaturePad.clear();
+}
+
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+// Limpar assinatura
+$('#clear-signature').click(function() {
+    signaturePad.clear();
+    $('#btnEnviar').prop('disabled', true);
+    $('#confirm-signature').show();
+});
+
+// Confirmar assinatura
+$('#confirm-signature').click(function() {
+    if (signaturePad.isEmpty()) {
+        alert('Por favor, assine antes de confirmar.');
+        return;
+    }
+    
+    $(this).hide();
+    $('#btnEnviar').prop('disabled', false);
+});
+
+// Enviar formulário
+$('#btnEnviar').click(function() {
+    if (signaturePad.isEmpty()) {
+        alert('Por favor, assine antes de enviar.');
+        return;
+    }
+    
+    const signatureData = signaturePad.toDataURL();
+    
+    // Salvar assinatura e continuar
+    localStorage.setItem('assinatura_tutor', signatureData);
+    
+    alert('Dados salvos com sucesso!');
+    window.location.href = '{{ url_for("dashboard") }}';
+});
+</script>
+{% endblock %}

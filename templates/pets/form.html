@@ -1,0 +1,175 @@
+<!-- templates/pets/form.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step completed">1</div>
+            <div class="step active">2</div>
+            <div class="step-title text-center mt-2">
+                <small>Dados do PET</small>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-body p-4">
+                <div class="text-center mb-3">
+                    <div style="padding: 20px; background: #f8f9fa; border-radius: 8px; margin-bottom: 20px;">
+                        <i class="fas fa-camera icon-blue" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                        <p class="mb-0">Toque ou clique para adicionar uma foto do PET</p>
+                    </div>
+                </div>
+                
+                <form id="petForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="nome_pet" class="form-label">Nome do Pet *</label>
+                            <input type="text" class="form-control" id="nome_pet" name="nome_pet" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="idade" class="form-label">Idade</label>
+                            <input type="number" class="form-control" id="idade" name="idade" min="0" max="30">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="raca" class="form-label">Raça</label>
+                            <select class="form-select" id="raca" name="raca">
+                                <option value="">Selecionar</option>
+                                <option value="SRD">SRD</option>
+                                <option value="Golden Retriever">Golden Retriever</option>
+                                <option value="Labrador">Labrador</option>
+                                <option value="Poodle">Poodle</option>
+                                <option value="Pastor Alemão">Pastor Alemão</option>
+                                <option value="Bulldog">Bulldog</option>
+                                <option value="Yorkshire">Yorkshire</option>
+                                <option value="Shih Tzu">Shih Tzu</option>
+                                <option value="Maltes">Maltes</option>
+                                <option value="Persa">Persa</option>
+                                <option value="Siamês">Siamês</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="cor" class="form-label">Cor</label>
+                            <input type="text" class="form-control" id="cor" name="cor">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="especie" class="form-label">Espécie *</label>
+                            <select class="form-select" id="especie" name="especie" required>
+                                <option value="">Selecionar</option>
+                                <option value="Canino">Canino</option>
+                                <option value="Felino">Felino</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="meu_dono" class="form-label">Meu dono</label>
+                            <select class="form-select" id="meu_dono" name="meu_dono" required>
+                                <option value="">Digite o CPF</option>
+                                {% for tutor in tutores %}
+                                <option value="{{ tutor.id }}">{{ tutor.nome }} - {{ tutor.cpf }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="porte" class="form-label">Porte</label>
+                            <select class="form-select" id="porte" name="porte">
+                                <option value="">Selecionar</option>
+                                <option value="Pequeno">Pequeno</option>
+                                <option value="Médio">Médio</option>
+                                <option value="Grande">Grande</option>
+                                <option value="Gigante">Gigante</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="temperamento" class="form-label">Temperamento</label>
+                            <select class="form-select" id="temperamento" name="temperamento">
+                                <option value="">Selecionar</option>
+                                <option value="Manso">Manso</option>
+                                <option value="Agressivo">Agressivo</option>
+                                <option value="Agitado">Agitado</option>
+                                <option value="Tímido">Tímido</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="pelagem" class="form-label">Pelagem</label>
+                            <select class="form-select" id="pelagem" name="pelagem">
+                                <option value="Curta">Curta</option>
+                                <option value="Longa">Longa</option>
+                                <option value="Crespa">Crespa</option>
+                                <option value="Lisa">Lisa</option>
+                                <option value="Ondulada">Ondulada</option>
+                                <option value="Dupla">Dupla</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between pt-3">
+                        <button type="button" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-arrow-right me-2"></i>Próximo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$('#petForm').submit(function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        nome: $('#nome_pet').val(),
+        idade: $('#idade').val() || null,
+        raca: $('#raca').val(),
+        cor: $('#cor').val(),
+        especie: $('#especie').val(),
+        porte: $('#porte').val(),
+        pelagem: $('#pelagem').val(),
+        temperamento: $('#temperamento').val(),
+        tutor_id: $('#meu_dono').val()
+    };
+    
+    $.ajax({
+        url: '{{ url_for("cadastrar_pet") }}',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function(response) {
+            if (response.success) {
+                // Redirecionar para anamnese
+                window.location.href = '/anamnese/' + response.pet_id;
+            } else {
+                alert('Erro: ' + response.message);
+            }
+        },
+        error: function() {
+            alert('Erro ao cadastrar pet');
+        }
+    });
+});
+</script>
+{% endblock %}

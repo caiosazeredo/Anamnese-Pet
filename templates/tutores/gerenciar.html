@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-user-cog me-2"></i>Gerência de tutor</h2>
+    </div>
+</div>
+
+<!-- Filtros de Busca -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="search" placeholder="Procurar por nome ou CPF" value="{{ search }}">
+            </div>
+            
+            <div class="col-md-3">
+                <select class="form-select" name="raca">
+                    <option value="">Filtrar por raça do pet</option>
+                    {% for raca in racas %}
+                    <option value="{{ raca }}" {% if raca_filter == raca %}selected{% endif %}>{{ raca }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <select class="form-select" name="porte">
+                    <option value="">Filtrar por porte do pet</option>
+                    {% for porte in portes %}
+                    <option value="{{ porte }}" {% if porte_filter == porte %}selected{% endif %}>{{ porte }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-2"></i>Buscar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de Tutores -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Tutores Cadastrados</h5>
+        <a href="{{ url_for('cadastrar_tutor') }}" class="btn btn-primary">
+            <i class="fas fa-user-plus me-2"></i>Adicionar tutor
+        </a>
+    </div>
+    
+    <div class="card-body">
+        {% if tutores %}
+        <div class="list-group">
+            {% for tutor in tutores %}
+            <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>{{ tutor.nome }}</strong><br>
+                                <small class="text-muted">{{ tutor.cpf }}</small>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <small class="text-muted">Telefone:</small><br>
+                                {{ tutor.telefone }}
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <small class="text-muted">Endereço:</small><br>
+                                {{ tutor.endereco }}<br>
+                                {{ tutor.bairro }}, {{ tutor.cidade }}
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <small class="text-muted">CPF:</small><br>
+                                {{ tutor.cpf }}<br>
+                                <small class="text-muted">RG:</small><br>
+                                {{ tutor.rg or '-' }}
+                            </div>
+                            
+                            <div class="col-md-1 text-end">
+                                <div class="btn-group-vertical btn-group-sm">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="editarTutor({{ tutor.id }})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" onclick="deletarTutor({{ tutor.id }})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Pets do tutor -->
+                        {% if tutor.pets %}
+                        <div class="mt-3">
+                            <h6 class="text-muted">Pets:</h6>
+                            <div class="row">
+                                {% for pet in tutor.pets %}
+                                <div class="col-md-6 mb-2">
+                                    <div class="card card-body py-2">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <strong>{{ pet.nome }}</strong>
+                                                <small class="text-muted d-block">
+                                                    {{ pet.especie }}
+                                                    {% if pet.raca %} - {{ pet.raca }}{% endif %}
+                                                    {% if pet.porte %} - {{ pet.porte }}{% endif %}
+                                                </small>
+                                            </div>
+                                            <span class="badge bg-{% if pet.especie == 'Canino' %}primary{% elif pet.especie == 'Felino' %}success{% else %}secondary{% endif %}">
+                                                {{ pet.especie }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Paginação simples -->
+        <div class="text-center mt-3">
+            <p class="text-muted">Mostrando {{ tutores|length }} tutor(es)</p>
+        </div>
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-users text-muted" style="font-size: 3rem;"></i>
+            <h5 class="mt-3 text-muted">Nenhum tutor encontrado</h5>
+            <p class="text-muted">Tente ajustar os filtros de busca ou cadastre um novo tutor</p>
+            <a href="{{ url_for('cadastrar_tutor') }}" class="btn btn-primary">
+                <i class="fas fa-user-plus me-2"></i>Cadastrar Primeiro Tutor
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="text-center mt-4">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-lg">
+        <i class="fas fa-arrow-left me-2"></i>Voltar ao Dashboard
+    </a>
+</div>
+
+<!-- Modal Editar Tutor -->
+<div class="modal fade" id="editarTutorModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Tutor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarTutor">
+                    <!-- Campos similares ao cadastro -->
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">Nome Completo</label>
+                            <input type="text" class="form-control" id="edit_nome" required>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Telefone</label>
+                            <input type="tel" class="form-control" id="edit_telefone" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Bairro</label>
+                            <input type="text" class="form-control" id="edit_bairro" required>
+                        </div>
+                        
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">Cidade</label>
+                            <input type="text" class="form-control" id="edit_cidade" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Endereço</label>
+                        <input type="text" class="form-control" id="edit_endereco" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">CPF</label>
+                            <input type="text" class="form-control" id="edit_cpf" required readonly>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">RG</label>
+                            <input type="text" class="form-control" id="edit_rg">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="formEditarTutor" class="btn btn-primary">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function editarTutor(id) {
+    // Buscar dados do tutor e preencher modal
+    $.get('/api/tutor/' + id, function(data) {
+        $('#edit_nome').val(data.nome);
+        $('#edit_telefone').val(data.telefone);
+        $('#edit_bairro').val(data.bairro);
+        $('#edit_cidade').val(data.cidade);
+        $('#edit_endereco').val(data.endereco);
+        $('#edit_cpf').val(data.cpf);
+        $('#edit_rg').val(data.rg);
+        
+        $('#formEditarTutor').data('tutor-id', id);
+        $('#editarTutorModal').modal('show');
+    });
+}
+
+function deletarTutor(id) {
+    if (confirm('Tem certeza que deseja remover este tutor?\nEsta ação não pode ser desfeita.')) {
+        $.ajax({
+            url: '/api/tutor/' + id,
+            type: 'DELETE',
+            success: function() {
+                alert('Tutor removido com sucesso!');
+                location.reload();
+            },
+            error: function() {
+                alert('Erro ao remover tutor. Verifique se não há pets ou atendimentos vinculados.');
+            }
+        });
+    }
+}
+
+$('#formEditarTutor').submit(function(e) {
+    e.preventDefault();
+    
+    const tutorId = $(this).data('tutor-id');
+    const formData = {
+        nome: $('#edit_nome').val(),
+        telefone: $('#edit_telefone').val(),
+        bairro: $('#edit_bairro').val(),
+        cidade: $('#edit_cidade').val(),
+        endereco: $('#edit_endereco').val(),
+        rg: $('#edit_rg').val()
+    };
+    
+    $.ajax({
+        url: '/api/tutor/' + tutorId,
+        type: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function() {
+            alert('Tutor atualizado com sucesso!');
+            $('#editarTutorModal').modal('hide');
+            location.reload();
+        },
+        error: function() {
+            alert('Erro ao atualizar tutor');
+        }
+    });
+});
+</script>
+{% endblock %}
