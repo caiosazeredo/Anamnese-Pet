@@ -1,4 +1,4 @@
-# config.py - Configuração atualizada para Aiven Cloud
+# config.py - Configuração corrigida para PyMySQL
 import os
 from dotenv import load_dotenv
 
@@ -12,15 +12,12 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///petanamnese.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
-    # Configurações básicas do SQLAlchemy
+    # Configurações básicas do SQLAlchemy para PyMySQL
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
         'pool_recycle': 300,
-        'connect_args': {
-            'ssl_disabled': False,
-            'ssl_check_hostname': False,
-            'ssl_verify_cert': False
-        }
+        'pool_size': int(os.environ.get('DB_POOL_SIZE') or 5),
+        'max_overflow': int(os.environ.get('DB_MAX_OVERFLOW') or 10),
     }
     
     # Configurações de Upload
@@ -36,7 +33,7 @@ class Config:
     
     # Configurações de Segurança
     WTF_CSRF_ENABLED = os.environ.get('WTF_CSRF_ENABLED', 'true').lower() in ['true', 'on', '1']
-    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = False  # Será True apenas em produção
     SESSION_COOKIE_HTTPONLY = True
     PERMANENT_SESSION_LIFETIME = int(os.environ.get('SESSION_LIFETIME') or 3600)  # 1 hora
     
@@ -47,31 +44,46 @@ class Config:
 class DevelopmentConfig(Config):
     """Configuração para desenvolvimento"""
     DEBUG = True
-    SESSION_COOKIE_SECURE = False  # Para desenvolvimento local sem HTTPS
     
-    # Para desenvolvimento, permitir SQLite se não houver DATABASE_URL
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///petanamnese_dev.db'
+    # Para desenvolvimento local, usar SQLite se não houver DATABASE_URL
+    if not os.environ.get('DATABASE_URL'):
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///petanamnese_dev.db'
+    
+    # Configurações específicas para desenvolvimento
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,
+        'echo': False,  # Set to True para debug de SQL
+    }
 
 class ProductionConfig(Config):
     """Configuração para produção"""
     DEBUG = False
     SESSION_COOKIE_SECURE = True
     
-    # Configurações adicionais de produção para melhor performance
+    # Configurações otimizadas para produção com MySQL/MariaDB
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
         'pool_recycle': 300,
         'pool_size': int(os.environ.get('DB_POOL_SIZE') or 10),
         'max_overflow': int(os.environ.get('DB_MAX_OVERFLOW') or 20),
         'connect_args': {
-            'ssl_disabled': False,
-            'ssl_check_hostname': False,
-            'ssl_verify_cert': False,
             'connect_timeout': int(os.environ.get('DB_CONNECT_TIMEOUT') or 60),
             'read_timeout': int(os.environ.get('DB_READ_TIMEOUT') or 60),
-            'write_timeout': int(os.environ.get('DB_WRITE_TIMEOUT') or 60)
+            'write_timeout': int(os.environ.get('DB_WRITE_TIMEOUT') or 60),
+            'charset': 'utf8mb4',
+            'use_unicode': True,
         }
     }
+    
+    # Adicionar SSL apenas se especificado
+    if os.environ.get('DB_USE_SSL', 'false').lower() == 'true':
+        SQLALCHEMY_ENGINE_OPTIONS['connect_args']['ssl_disabled'] = False
+        if os.environ.get('DB_SSL_CA'):
+            SQLALCHEMY_ENGINE_OPTIONS['connect_args']['ssl_ca'] = os.environ.get('DB_SSL_CA')
+        if os.environ.get('DB_SSL_CERT'):
+            SQLALCHEMY_ENGINE_OPTIONS['connect_args']['ssl_cert'] = os.environ.get('DB_SSL_CERT')
+        if os.environ.get('DB_SSL_KEY'):
+            SQLALCHEMY_ENGINE_OPTIONS['connect_args']['ssl_key'] = os.environ.get('DB_SSL_KEY')
 
 class TestingConfig(Config):
     """Configuração para testes"""
@@ -90,4 +102,5 @@ config = {
 
 def get_config():
     """Retorna a configuração baseada na variável de ambiente FLASK_ENV"""
-    return config.get(os.environ.get('FLASK_ENV', 'development'), DevelopmentConfig)
+    env = os.environ.get('FLASK_ENV', 'development')
+    return config.get(env, DevelopmentConfig)

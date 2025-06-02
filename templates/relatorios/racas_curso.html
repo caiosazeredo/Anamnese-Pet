@@ -1,1 +1,377 @@
- 
+<!-- templates/relatorios/racas_curso.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-dna me-2"></i>Raças por Curso</h2>
+        <p class="text-muted">Distribuição de raças atendidas por curso e período</p>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label for="curso_id" class="form-label">Curso</label>
+                <select class="form-select" id="curso_id" name="curso_id">
+                    <option value="">Todos os cursos</option>
+                    {% for curso in cursos %}
+                    <option value="{{ curso.id }}" {% if request.args.get('curso_id') == curso.id|string %}selected{% endif %}>
+                        {{ curso.nome }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <label for="especie" class="form-label">Espécie</label>
+                <select class="form-select" id="especie" name="especie">
+                    <option value="">Todas as espécies</option>
+                    <option value="Canino" {% if request.args.get('especie') == 'Canino' %}selected{% endif %}>Canino</option>
+                    <option value="Felino" {% if request.args.get('especie') == 'Felino' %}selected{% endif %}>Felino</option>
+                    <option value="Outros" {% if request.args.get('especie') == 'Outros' %}selected{% endif %}>Outros</option>
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label for="data_inicio" class="form-label">Data Início</label>
+                <input type="date" class="form-control" id="data_inicio" name="data_inicio" 
+                       value="{{ request.args.get('data_inicio', '') }}">
+            </div>
+            
+            <div class="col-md-2">
+                <label for="data_fim" class="form-label">Data Fim</label>
+                <input type="date" class="form-control" id="data_fim" name="data_fim" 
+                       value="{{ request.args.get('data_fim', '') }}">
+            </div>
+            
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-2"></i>Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Cards de Resumo -->
+{% if stats_resumo %}
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center border-primary">
+            <div class="card-body">
+                <h3 class="text-primary">{{ stats_resumo.total_racas }}</h3>
+                <p class="mb-0">Raças Diferentes</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-success">
+            <div class="card-body">
+                <h3 class="text-success">{{ stats_resumo.total_atendimentos }}</h3>
+                <p class="mb-0">Total Atendimentos</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-info">
+            <div class="card-body">
+                <h3 class="text-info">{{ stats_resumo.pets_unicos }}</h3>
+                <p class="mb-0">Pets Únicos</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-warning">
+            <div class="card-body">
+                <h3 class="text-warning">{{ stats_resumo.raca_mais_comum }}</h3>
+                <p class="mb-0">Raça Mais Comum</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Gráfico e Tabela -->
+<div class="row">
+    <!-- Gráfico de Barras -->
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Top 10 Raças Mais Atendidas</h5>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" onclick="toggleChartType('bar')">Barras</button>
+                    <button class="btn btn-outline-primary" onclick="toggleChartType('pie')">Pizza</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="racasChart" height="400"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ranking -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Ranking por Raça</h5>
+                <button class="btn btn-success btn-sm" onclick="exportarPDF()">
+                    <i class="fas fa-file-pdf me-1"></i>PDF
+                </button>
+            </div>
+            <div class="card-body">
+                {% if ranking_racas %}
+                <div class="list-group list-group-flush">
+                    {% for raca in ranking_racas[:10] %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <div>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-{% if loop.index <= 3 %}warning{% else %}secondary{% endif %} me-2">
+                                    {% if loop.index == 1 %}🥇
+                                    {% elif loop.index == 2 %}🥈
+                                    {% elif loop.index == 3 %}🥉
+                                    {% else %}{{ loop.index }}{% endif %}
+                                </span>
+                                <strong>{{ raca.nome or 'SRD' }}</strong>
+                            </div>
+                            <small class="text-muted">{{ raca.percentual }}% do total</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-primary">{{ raca.total }}</span><br>
+                            <small class="text-muted">{{ raca.pets_unicos }} pets</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-dna text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mt-2">Nenhuma raça encontrada</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detalhamento por Curso -->
+{% if detalhes_por_curso %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Detalhamento por Curso</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Curso</th>
+                        <th>Raças Distintas</th>
+                        <th>Raça Mais Comum</th>
+                        <th>Total Atendimentos</th>
+                        <th>Diversidade*</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for curso in detalhes_por_curso %}
+                    <tr>
+                        <td><strong>{{ curso.nome }}</strong></td>
+                        <td>
+                            <span class="badge bg-info">{{ curso.racas_distintas }}</span>
+                        </td>
+                        <td>
+                            {{ curso.raca_mais_comum }} 
+                            <small class="text-muted">({{ curso.percentual_raca_comum }}%)</small>
+                        </td>
+                        <td>{{ curso.total_atendimentos }}</td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-{% if curso.indice_diversidade >= 0.7 %}success{% elif curso.indice_diversidade >= 0.4 %}warning{% else %}danger{% endif %}" 
+                                     style="width: {{ (curso.indice_diversidade * 100)|round }}%">
+                                    {{ (curso.indice_diversidade * 100)|round }}%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="verDetalhesCurso({{ curso.id }})">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <small class="text-muted">
+            *Índice de Diversidade: Medida da variedade de raças no curso (0-100%). 
+            Valores altos indicam maior diversidade de raças atendidas.
+        </small>
+    </div>
+</div>
+{% endif %}
+
+<!-- Comparativo Temporal -->
+{% if comparativo_temporal %}
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">Evolução das Raças ao Longo do Tempo</h5>
+    </div>
+    <div class="card-body">
+        <canvas id="evolucaoChart" height="100"></canvas>
+    </div>
+</div>
+{% endif %}
+
+<div class="text-center mt-4">
+    <a href="{{ url_for('relatorios.index') }}" class="btn btn-secondary btn-lg">
+        <i class="fas fa-arrow-left me-2"></i>Voltar aos Relatórios
+    </a>
+</div>
+
+<!-- Modal Detalhes do Curso -->
+<div class="modal fade" id="detalhesCursoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalhes do Curso</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="detalhes-curso-content">
+                    <!-- Conteúdo carregado via AJAX -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let racasChart;
+let currentChartType = 'bar';
+
+// Dados do gráfico principal
+{% if chart_data %}
+const chartData = {
+    labels: {{ chart_data.labels|safe }},
+    datasets: [{
+        label: 'Atendimentos',
+        data: {{ chart_data.data|safe }},
+        backgroundColor: [
+            '#339af0', '#51cf66', '#ffd43b', '#ff6b6b', '#f783ac',
+            '#9775fa', '#74c0fc', '#69db7c', '#ffd93d', '#ff8cc8'
+        ],
+        borderColor: '#fff',
+        borderWidth: 2
+    }]
+};
+
+function initChart() {
+    const ctx = document.getElementById('racasChart').getContext('2d');
+    racasChart = new Chart(ctx, {
+        type: currentChartType,
+        data: chartData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: currentChartType === 'pie',
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || context.parsed.y || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            scales: currentChartType === 'bar' ? {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            } : {}
+        }
+    });
+}
+
+function toggleChartType(type) {
+    currentChartType = type;
+    racasChart.destroy();
+    initChart();
+    
+    // Atualizar botões ativos
+    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+}
+
+// Inicializar gráfico
+document.addEventListener('DOMContentLoaded', function() {
+    initChart();
+});
+{% endif %}
+
+// Gráfico de evolução temporal
+{% if comparativo_temporal %}
+const evolucaoCtx = document.getElementById('evolucaoChart').getContext('2d');
+new Chart(evolucaoCtx, {
+    type: 'line',
+    data: {
+        labels: {{ comparativo_temporal.labels|safe }},
+        datasets: {{ comparativo_temporal.datasets|safe }}
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
+                }
+            }
+        }
+    }
+});
+{% endif %}
+
+function verDetalhesCurso(cursoId) {
+    $.ajax({
+        url: `/api/relatorio/racas-curso/${cursoId}/detalhes`,
+        success: function(data) {
+            $('#detalhes-curso-content').html(data);
+            $('#detalhesCursoModal').modal('show');
+        },
+        error: function() {
+            alert('Erro ao carregar detalhes do curso');
+        }
+    });
+}
+
+function exportarPDF() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('formato', 'pdf');
+    window.open('?' + params.toString(), '_blank');
+}
+</script>
+{% endblock %}

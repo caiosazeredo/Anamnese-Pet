@@ -1,1 +1,524 @@
- 
+<!-- templates/turmas/alunos.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-users me-2"></i>Alunos da Turma</h2>
+        <p class="text-muted">Gerenciar alunos matriculados na turma {{ turma.codigo }}</p>
+    </div>
+</div>
+
+<!-- Informações da Turma -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h5 class="mb-0">{{ turma.codigo }} - {{ turma.curso.nome }}</h5>
+                <small>Instrutor: {{ turma.instrutor.nome }}</small>
+            </div>
+            <div class="col-md-4 text-end">
+                <span class="badge bg-light text-dark fs-6">
+                    {{ alunos_matriculados|length }}/{{ turma.max_alunos }} alunos
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <strong>Período:</strong><br>
+                {{ turma.data_inicio.strftime('%d/%m/%Y') }} a {{ turma.data_fim.strftime('%d/%m/%Y') }}
+            </div>
+            <div class="col-md-3">
+                <strong>Horário:</strong><br>
+                {% if turma.horario_inicio and turma.horario_fim %}
+                {{ turma.horario_inicio.strftime('%H:%M') }} às {{ turma.horario_fim.strftime('%H:%M') }}
+                {% else %}
+                Não definido
+                {% endif %}
+            </div>
+            <div class="col-md-3">
+                <strong>Local:</strong><br>
+                {{ turma.local or 'Não definido' }}
+            </div>
+            <div class="col-md-3">
+                <strong>Status:</strong><br>
+                <span class="badge bg-{% if turma.ativa %}success{% else %}danger{% endif %}">
+                    {% if turma.ativa %}Ativa{% else %}Inativa{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações da Turma -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#adicionarAlunoModal">
+                    <i class="fas fa-user-plus me-2"></i>Adicionar Aluno
+                </button>
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-success w-100" onclick="exportarListaAlunos()">
+                    <i class="fas fa-file-pdf me-2"></i>Exportar Lista
+                </button>
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-info w-100" onclick="enviarEmailTurma()">
+                    <i class="fas fa-envelope me-2"></i>Email para Turma
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Alunos -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Alunos Matriculados</h5>
+        <div class="input-group" style="width: 300px;">
+            <input type="text" class="form-control" id="searchAluno" placeholder="Buscar aluno...">
+            <button class="btn btn-outline-secondary" type="button">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        {% if alunos_matriculados %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Aluno</th>
+                        <th>CPF</th>
+                        <th>Contato</th>
+                        <th>Data Matrícula</th>
+                        <th>Situação</th>
+                        <th>Atendimentos</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for matricula in alunos_matriculados %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar bg-primary text-white rounded-circle me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <strong>{{ matricula.aluno.nome }}</strong>
+                                    <br><small class="text-muted">ID: {{ matricula.aluno.id }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ matricula.aluno.cpf }}</td>
+                        <td>
+                            {% if matricula.aluno.telefone %}
+                            <i class="fas fa-phone me-1"></i>{{ matricula.aluno.telefone }}<br>
+                            {% endif %}
+                            {% if matricula.aluno.email %}
+                            <i class="fas fa-envelope me-1"></i>{{ matricula.aluno.email }}
+                            {% endif %}
+                        </td>
+                        <td>{{ matricula.data_matricula.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            <select class="form-select form-select-sm situacao-select" 
+                                    data-aluno-turma-id="{{ matricula.id }}"
+                                    data-situacao-atual="{{ matricula.situacao }}">
+                                <option value="Matriculado" {% if matricula.situacao == 'Matriculado' %}selected{% endif %}>Matriculado</option>
+                                <option value="Aprovado" {% if matricula.situacao == 'Aprovado' %}selected{% endif %}>Aprovado</option>
+                                <option value="Reprovado" {% if matricula.situacao == 'Reprovado' %}selected{% endif %}>Reprovado</option>
+                                <option value="Desistente" {% if matricula.situacao == 'Desistente' %}selected{% endif %}>Desistente</option>
+                            </select>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">
+                                {{ matricula.aluno.total_atendimentos_turma or 0 }} atendimentos
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="verPerfilAluno({{ matricula.aluno.id }})" title="Ver perfil">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="verAtendimentosAluno({{ matricula.aluno.id }})" title="Ver atendimentos">
+                                    <i class="fas fa-clipboard-list"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editarAluno({{ matricula.aluno.id }})" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="removerDaTurma({{ matricula.id }})" title="Remover da turma">
+                                    <i class="fas fa-user-minus"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-user-slash text-muted" style="font-size: 3rem;"></i>
+            <h5 class="mt-3 text-muted">Nenhum aluno matriculado</h5>
+            <p class="text-muted">Adicione alunos à turma para começar</p>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#adicionarAlunoModal">
+                <i class="fas fa-user-plus me-2"></i>Adicionar Primeiro Aluno
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Estatísticas da Turma -->
+{% if stats_turma %}
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="text-primary">{{ stats_turma.matriculados }}</h4>
+                <p class="mb-0">Matriculados</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="text-success">{{ stats_turma.aprovados }}</h4>
+                <p class="mb-0">Aprovados</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="text-danger">{{ stats_turma.reprovados }}</h4>
+                <p class="mb-0">Reprovados</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h4 class="text-warning">{{ stats_turma.desistentes }}</h4>
+                <p class="mb-0">Desistentes</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="text-center mt-4">
+    <a href="{{ url_for('gerenciar_turmas') }}" class="btn btn-secondary btn-lg">
+        <i class="fas fa-arrow-left me-2"></i>Voltar às Turmas
+    </a>
+</div>
+
+<!-- Modal Adicionar Aluno -->
+<div class="modal fade" id="adicionarAlunoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Aluno à Turma</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        <label for="buscarAluno" class="form-label">Buscar Aluno</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="buscarAluno" placeholder="Digite nome ou CPF">
+                            <button class="btn btn-outline-secondary" type="button" id="btnBuscarAluno">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button class="btn btn-success w-100" onclick="novoAluno()">
+                            <i class="fas fa-user-plus me-2"></i>Novo Aluno
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="resultadosBusca" class="mt-3">
+                    <!-- Resultados da busca serão inseridos aqui -->
+                </div>
+                
+                <div id="alunoSelecionado" style="display: none;">
+                    <hr>
+                    <h6>Aluno Selecionado:</h6>
+                    <div class="alert alert-info">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong id="alunoNome"></strong><br>
+                                <small>CPF: <span id="alunoCpf"></span></small>
+                            </div>
+                            <div class="col-md-6">
+                                <small>Telefone: <span id="alunoTelefone"></span></small><br>
+                                <small>Email: <span id="alunoEmail"></span></small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="situacaoMatricula" class="form-label">Situação da Matrícula</label>
+                        <select class="form-select" id="situacaoMatricula">
+                            <option value="Matriculado">Matriculado</option>
+                            <option value="Aprovado">Aprovado</option>
+                            <option value="Reprovado">Reprovado</option>
+                            <option value="Desistente">Desistente</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnConfirmarMatricula" disabled>
+                    Matricular Aluno
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Perfil do Aluno -->
+<div class="modal fade" id="perfilAlunoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Perfil do Aluno</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="perfilAlunoContent">
+                    <!-- Conteúdo será carregado via AJAX -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let alunoSelecionadoId = null;
+
+// Buscar alunos
+$('#btnBuscarAluno, #buscarAluno').on('click keypress', function(e) {
+    if (e.type === 'click' || e.which === 13) {
+        buscarAlunos();
+    }
+});
+
+function buscarAlunos() {
+    const termo = $('#buscarAluno').val();
+    if (termo.length < 3) {
+        alert('Digite pelo menos 3 caracteres para buscar');
+        return;
+    }
+    
+    $.ajax({
+        url: '/api/alunos/buscar',
+        data: { 
+            q: termo,
+            turma_id: {{ turma.id }},
+            excluir_matriculados: true
+        },
+        success: function(alunos) {
+            mostrarResultadosBusca(alunos);
+        },
+        error: function() {
+            alert('Erro ao buscar alunos');
+        }
+    });
+}
+
+function mostrarResultadosBusca(alunos) {
+    const container = $('#resultadosBusca');
+    container.empty();
+    
+    if (alunos.length === 0) {
+        container.html('<div class="alert alert-warning">Nenhum aluno encontrado ou todos já estão matriculados nesta turma</div>');
+        return;
+    }
+    
+    const lista = $('<div class="list-group"></div>');
+    
+    alunos.forEach(aluno => {
+        const item = $(`
+            <div class="list-group-item list-group-item-action" data-aluno-id="${aluno.id}">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="mb-1">${aluno.nome}</h6>
+                        <p class="mb-1 text-muted">CPF: ${aluno.cpf}</p>
+                        <small>Tel: ${aluno.telefone || 'N/A'} - Email: ${aluno.email || 'N/A'}</small>
+                    </div>
+                    <span class="badge bg-primary">Selecionar</span>
+                </div>
+            </div>
+        `);
+        
+        item.click(() => selecionarAluno(aluno));
+        lista.append(item);
+    });
+    
+    container.append(lista);
+}
+
+function selecionarAluno(aluno) {
+    alunoSelecionadoId = aluno.id;
+    
+    $('#alunoNome').text(aluno.nome);
+    $('#alunoCpf').text(aluno.cpf);
+    $('#alunoTelefone').text(aluno.telefone || 'N/A');
+    $('#alunoEmail').text(aluno.email || 'N/A');
+    
+    $('#alunoSelecionado').show();
+    $('#btnConfirmarMatricula').prop('disabled', false);
+    $('#resultadosBusca').hide();
+}
+
+// Confirmar matrícula
+$('#btnConfirmarMatricula').click(function() {
+    if (!alunoSelecionadoId) {
+        alert('Selecione um aluno primeiro');
+        return;
+    }
+    
+    const dados = {
+        aluno_id: alunoSelecionadoId,
+        turma_id: {{ turma.id }},
+        situacao: $('#situacaoMatricula').val()
+    };
+    
+    $.ajax({
+        url: '/api/matricula',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(dados),
+        success: function(response) {
+            if (response.success) {
+                alert('Aluno matriculado com sucesso!');
+                location.reload();
+            } else {
+                alert('Erro: ' + response.message);
+            }
+        },
+        error: function() {
+            alert('Erro ao matricular aluno');
+        }
+    });
+});
+
+// Atualizar situação do aluno
+$('.situacao-select').change(function() {
+    const select = $(this);
+    const alunoTurmaId = select.data('aluno-turma-id');
+    const situacaoAtual = select.data('situacao-atual');
+    const novaSituacao = select.val();
+    
+    if (novaSituacao !== situacaoAtual) {
+        if (confirm(`Confirma a alteração da situação para "${novaSituacao}"?`)) {
+            $.ajax({
+                url: `/api/matricula/${alunoTurmaId}`,
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({ situacao: novaSituacao }),
+                success: function(response) {
+                    if (response.success) {
+                        select.data('situacao-atual', novaSituacao);
+                        alert('Situação atualizada com sucesso!');
+                    } else {
+                        select.val(situacaoAtual);
+                        alert('Erro: ' + response.message);
+                    }
+                },
+                error: function() {
+                    select.val(situacaoAtual);
+                    alert('Erro ao atualizar situação');
+                }
+            });
+        } else {
+            select.val(situacaoAtual);
+        }
+    }
+});
+
+function verPerfilAluno(alunoId) {
+    $.ajax({
+        url: `/api/aluno/${alunoId}/perfil`,
+        success: function(data) {
+            $('#perfilAlunoContent').html(data);
+            $('#perfilAlunoModal').modal('show');
+        },
+        error: function() {
+            alert('Erro ao carregar perfil do aluno');
+        }
+    });
+}
+
+function verAtendimentosAluno(alunoId) {
+    window.open(`/relatorios/alunos-atendimentos?aluno_id=${alunoId}`, '_blank');
+}
+
+function editarAluno(alunoId) {
+    window.location.href = `/aluno/${alunoId}/editar`;
+}
+
+function removerDaTurma(matriculaId) {
+    if (confirm('Tem certeza que deseja remover este aluno da turma?')) {
+        $.ajax({
+            url: `/api/matricula/${matriculaId}`,
+            type: 'DELETE',
+            success: function(response) {
+                if (response.success) {
+                    alert('Aluno removido da turma com sucesso!');
+                    location.reload();
+                } else {
+                    alert('Erro: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('Erro ao remover aluno da turma');
+            }
+        });
+    }
+}
+
+function novoAluno() {
+    window.open('/aluno/novo', '_blank');
+}
+
+function exportarListaAlunos() {
+    window.open(`/turma/{{ turma.id }}/alunos/exportar`, '_blank');
+}
+
+function enviarEmailTurma() {
+    alert('Funcionalidade de email será implementada');
+}
+
+// Busca em tempo real na tabela
+$('#searchAluno').on('keyup', function() {
+    const value = $(this).val().toLowerCase();
+    $('tbody tr').filter(function() {
+        $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+    });
+});
+
+// Reset modal quando fechar
+$('#adicionarAlunoModal').on('hidden.bs.modal', function() {
+    $('#buscarAluno').val('');
+    $('#resultadosBusca').empty();
+    $('#alunoSelecionado').hide();
+    $('#btnConfirmarMatricula').prop('disabled', true);
+    alunoSelecionadoId = null;
+});
+</script>
+{% endblock %>}

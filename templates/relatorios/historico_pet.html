@@ -1,1 +1,358 @@
- 
+<!-- templates/relatorios/historico_pet.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-history me-2"></i>Histórico de Atendimentos</h2>
+        <p class="text-muted">Histórico completo de atendimentos por pet</p>
+    </div>
+</div>
+
+<!-- Busca de Pet -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label for="pet_search" class="form-label">Buscar Pet</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="pet_search" name="pet_search" 
+                           placeholder="Nome do pet ou tutor" value="{{ request.args.get('pet_search', '') }}">
+                    <button class="btn btn-outline-secondary" type="button" id="btnBuscarPet">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <label for="data_inicio" class="form-label">Período - Início</label>
+                <input type="date" class="form-control" id="data_inicio" name="data_inicio" 
+                       value="{{ request.args.get('data_inicio', '') }}">
+            </div>
+            
+            <div class="col-md-3">
+                <label for="data_fim" class="form-label">Período - Fim</label>
+                <input type="date" class="form-control" id="data_fim" name="data_fim" 
+                       value="{{ request.args.get('data_fim', '') }}">
+            </div>
+            
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-filter me-1"></i>Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Informações do Pet Selecionado -->
+{% if pet_selecionado %}
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h5 class="mb-0">
+                    <i class="fas fa-{% if pet_selecionado.especie == 'Canino' %}paw{% elif pet_selecionado.especie == 'Felino' %}cat{% else %}star{% endif %} me-2"></i>
+                    {{ pet_selecionado.nome }}
+                </h5>
+                <small>Tutor: {{ pet_selecionado.tutor.nome }}</small>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-light btn-sm" onclick="exportarHistoricoPDF({{ pet_selecionado.id }})">
+                    <i class="fas fa-file-pdf me-1"></i>Exportar PDF
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <strong>Espécie:</strong> {{ pet_selecionado.especie }}<br>
+                <strong>Raça:</strong> {{ pet_selecionado.raca or 'SRD' }}<br>
+                <strong>Porte:</strong> {{ pet_selecionado.porte or '-' }}
+            </div>
+            <div class="col-md-3">
+                <strong>Idade:</strong> {{ pet_selecionado.idade or '-' }} anos<br>
+                <strong>Cor:</strong> {{ pet_selecionado.cor or '-' }}<br>
+                <strong>Pelagem:</strong> {{ pet_selecionado.pelagem or '-' }}
+            </div>
+            <div class="col-md-3">
+                <strong>Temperamento:</strong> {{ pet_selecionado.temperamento or '-' }}<br>
+                <strong>Peso:</strong> {{ pet_selecionado.peso or '-' }} kg<br>
+                <strong>Cadastro:</strong> {{ pet_selecionado.created_at.strftime('%d/%m/%Y') }}
+            </div>
+            <div class="col-md-3">
+                <strong>Tutor:</strong> {{ pet_selecionado.tutor.nome }}<br>
+                <strong>Telefone:</strong> {{ pet_selecionado.tutor.telefone }}<br>
+                <strong>CPF:</strong> {{ pet_selecionado.tutor.cpf }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estatísticas Rápidas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-primary">{{ stats.total_atendimentos }}</h3>
+                <p class="mb-0">Total de Atendimentos</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-success">{{ stats.ultimo_atendimento }}</h3>
+                <p class="mb-0">Último Atendimento</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-info">{{ stats.cursos_distintos }}</h3>
+                <p class="mb-0">Cursos Frequentados</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3 class="text-warning">{{ stats.media_intervalo }}</h3>
+                <p class="mb-0">Média Entre Visitas (dias)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Timeline de Atendimentos -->
+{% if atendimentos %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Timeline de Atendimentos</h5>
+    </div>
+    <div class="card-body">
+        <div class="timeline">
+            {% for atendimento in atendimentos %}
+            <div class="timeline-item">
+                <div class="timeline-marker bg-{% if atendimento.status_atendimento == 'Finalizado' %}success{% elif atendimento.status_atendimento == 'Cancelado' %}danger{% else %}warning{% endif %}"></div>
+                <div class="timeline-content">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="card-title">
+                                        {{ atendimento.data_checkin.strftime('%d/%m/%Y') }}
+                                        <span class="badge bg-{% if atendimento.status_atendimento == 'Finalizado' %}success{% elif atendimento.status_atendimento == 'Cancelado' %}danger{% else %}warning{% endif %} ms-2">
+                                            {{ atendimento.status_atendimento }}
+                                        </span>
+                                    </h6>
+                                    <p class="card-text">
+                                        <strong>Curso:</strong> {{ atendimento.turma.curso.nome }}<br>
+                                        <strong>Turma:</strong> {{ atendimento.turma.codigo }}<br>
+                                        <strong>Horário:</strong> 
+                                        {{ atendimento.hora_checkin.strftime('%H:%M') if atendimento.hora_checkin }}
+                                        {% if atendimento.hora_checkout %}
+                                        - {{ atendimento.hora_checkout.strftime('%H:%M') }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    {% if atendimento.alunos_atendimento %}
+                                    <strong>Alunos:</strong>
+                                    <ul class="list-unstyled">
+                                        {% for aluno_atend in atendimento.alunos_atendimento %}
+                                        <li>
+                                            <span class="badge bg-{% if aluno_atend.funcao == 'Principal' %}primary{% else %}secondary{% endif %}">
+                                                {{ aluno_atend.funcao }}
+                                            </span>
+                                            {{ aluno_atend.aluno.nome }}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% endif %}
+                                    
+                                    {% if atendimento.procedimentos_atendimento %}
+                                    <strong>Procedimentos:</strong>
+                                    <div class="mt-1">
+                                        {% for proc_atend in atendimento.procedimentos_atendimento %}
+                                        {% if proc_atend.realizado %}
+                                        <span class="badge bg-success me-1">{{ proc_atend.procedimento.nome }}</span>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            {% if atendimento.observacoes_dia %}
+                            <hr>
+                            <div class="row">
+                                <div class="col-12">
+                                    <strong>Observações:</strong>
+                                    <p class="text-muted mt-1">{{ atendimento.observacoes_dia }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if atendimento.intercorrencia and atendimento.observacoes_intercorrencia %}
+                            <div class="alert alert-warning mb-0">
+                                <strong><i class="fas fa-exclamation-triangle me-1"></i>Intercorrência:</strong>
+                                {{ atendimento.observacoes_intercorrencia }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-calendar-times text-muted" style="font-size: 3rem;"></i>
+        <h5 class="mt-3 text-muted">Nenhum atendimento encontrado</h5>
+        <p class="text-muted">Este pet ainda não possui atendimentos registrados no período selecionado</p>
+    </div>
+</div>
+{% endif %}
+
+{% endif %}
+
+<!-- Lista de Pets para Seleção -->
+{% if not pet_selecionado and pets_encontrados %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Selecione um Pet</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for pet in pets_encontrados %}
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100 pet-card" onclick="selecionarPet({{ pet.id }})">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="pet-avatar bg-{% if pet.especie == 'Canino' %}primary{% elif pet.especie == 'Felino' %}success{% else %}warning{% endif %} text-white rounded-circle me-3" style="width: 40px; height: 40px;">
+                                <i class="fas fa-{% if pet.especie == 'Canino' %}paw{% elif pet.especie == 'Felino' %}cat{% else %}star{% endif %}"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">{{ pet.nome }}</h6>
+                                <small class="text-muted">{{ pet.especie }} - {{ pet.raca or 'SRD' }}</small>
+                            </div>
+                        </div>
+                        
+                        <p class="card-text">
+                            <strong>Tutor:</strong> {{ pet.tutor.nome }}<br>
+                            <small class="text-muted">{{ pet.tutor.telefone }}</small>
+                        </p>
+                        
+                        <div class="text-center">
+                            <span class="badge bg-info">{{ pet.total_atendimentos }} atendimento(s)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="text-center mt-4">
+    <a href="{{ url_for('relatorios.index') }}" class="btn btn-secondary btn-lg">
+        <i class="fas fa-arrow-left me-2"></i>Voltar aos Relatórios
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -35px;
+    top: 20px;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 2px currentColor;
+}
+
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: -28px;
+    top: 35px;
+    width: 2px;
+    height: calc(100% + 10px);
+    background-color: #dee2e6;
+}
+
+.pet-card {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.pet-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.pet-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selecionarPet(petId) {
+    const url = new URL(window.location);
+    url.searchParams.set('pet_id', petId);
+    window.location.href = url.toString();
+}
+
+function exportarHistoricoPDF(petId) {
+    const params = new URLSearchParams(window.location.search);
+    params.set('formato', 'pdf');
+    params.set('pet_id', petId);
+    window.open('?' + params.toString(), '_blank');
+}
+
+// Busca de pets
+$('#btnBuscarPet').click(function() {
+    const termo = $('#pet_search').val();
+    if (termo.length >= 2) {
+        const url = new URL(window.location);
+        url.searchParams.set('pet_search', termo);
+        url.searchParams.delete('pet_id'); // Remover pet selecionado para mostrar lista
+        window.location.href = url.toString();
+    } else {
+        alert('Digite pelo menos 2 caracteres para buscar');
+    }
+});
+
+$('#pet_search').keypress(function(e) {
+    if (e.which === 13) {
+        $('#btnBuscarPet').click();
+    }
+});
+</script>
+{% endblock %}

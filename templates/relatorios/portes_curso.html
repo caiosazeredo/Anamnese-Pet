@@ -1,1 +1,442 @@
- 
+<!-- templates/relatorios/portes_curso.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-ruler-vertical me-2"></i>Portes por Curso</h2>
+        <p class="text-muted">Distribuição de portes dos pets atendidos por curso</p>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label for="curso_id" class="form-label">Curso</label>
+                <select class="form-select" id="curso_id" name="curso_id">
+                    <option value="">Todos os cursos</option>
+                    {% for curso in cursos %}
+                    <option value="{{ curso.id }}" {% if request.args.get('curso_id') == curso.id|string %}selected{% endif %}>
+                        {{ curso.nome }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <label for="especie" class="form-label">Espécie</label>
+                <select class="form-select" id="especie" name="especie">
+                    <option value="">Todas as espécies</option>
+                    <option value="Canino" {% if request.args.get('especie') == 'Canino' %}selected{% endif %}>Canino</option>
+                    <option value="Felino" {% if request.args.get('especie') == 'Felino' %}selected{% endif %}>Felino</option>
+                    <option value="Outros" {% if request.args.get('especie') == 'Outros' %}selected{% endif %}>Outros</option>
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label for="data_inicio" class="form-label">Data Início</label>
+                <input type="date" class="form-control" id="data_inicio" name="data_inicio" 
+                       value="{{ request.args.get('data_inicio', '') }}">
+            </div>
+            
+            <div class="col-md-2">
+                <label for="data_fim" class="form-label">Data Fim</label>
+                <input type="date" class="form-control" id="data_fim" name="data_fim" 
+                       value="{{ request.args.get('data_fim', '') }}">
+            </div>
+            
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-2"></i>Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Cards de Estatísticas -->
+{% if stats_gerais %}
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center border-primary">
+            <div class="card-body">
+                <i class="fas fa-paw fa-2x text-primary mb-2"></i>
+                <h3 class="text-primary">{{ stats_gerais.pequeno }}</h3>
+                <p class="mb-0">Pequeno</p>
+                <small class="text-muted">{{ stats_gerais.pequeno_pct }}%</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-success">
+            <div class="card-body">
+                <i class="fas fa-dog fa-2x text-success mb-2"></i>
+                <h3 class="text-success">{{ stats_gerais.medio }}</h3>
+                <p class="mb-0">Médio</p>
+                <small class="text-muted">{{ stats_gerais.medio_pct }}%</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-warning">
+            <div class="card-body">
+                <i class="fas fa-horse fa-2x text-warning mb-2"></i>
+                <h3 class="text-warning">{{ stats_gerais.grande }}</h3>
+                <p class="mb-0">Grande</p>
+                <small class="text-muted">{{ stats_gerais.grande_pct }}%</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-danger">
+            <div class="card-body">
+                <i class="fas fa-hippo fa-2x text-danger mb-2"></i>
+                <h3 class="text-danger">{{ stats_gerais.gigante }}</h3>
+                <p class="mb-0">Gigante</p>
+                <small class="text-muted">{{ stats_gerais.gigante_pct }}%</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Gráficos -->
+<div class="row">
+    <!-- Gráfico de Pizza -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Distribuição Geral de Portes</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="portesChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráfico por Curso -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Portes por Curso</h5>
+                <button class="btn btn-success btn-sm" onclick="exportarPDF()">
+                    <i class="fas fa-file-pdf me-1"></i>PDF
+                </button>
+            </div>
+            <div class="card-body">
+                <canvas id="portesCursoChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela Detalhada -->
+{% if dados_por_curso %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Detalhamento por Curso e Espécie</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th rowspan="2">Curso</th>
+                        <th rowspan="2">Espécie</th>
+                        <th colspan="4" class="text-center">Portes</th>
+                        <th rowspan="2">Total</th>
+                        <th rowspan="2">Porte Predominante</th>
+                    </tr>
+                    <tr>
+                        <th class="text-center">Pequeno</th>
+                        <th class="text-center">Médio</th>
+                        <th class="text-center">Grande</th>
+                        <th class="text-center">Gigante</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dado in dados_por_curso %}
+                    <tr>
+                        <td><strong>{{ dado.curso_nome }}</strong></td>
+                        <td>
+                            <span class="badge bg-{% if dado.especie == 'Canino' %}primary{% elif dado.especie == 'Felino' %}success{% else %}warning{% endif %}">
+                                {{ dado.especie }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            {{ dado.pequeno }}
+                            {% if dado.pequeno > 0 %}
+                            <small class="text-muted d-block">({{ dado.pequeno_pct }}%)</small>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {{ dado.medio }}
+                            {% if dado.medio > 0 %}
+                            <small class="text-muted d-block">({{ dado.medio_pct }}%)</small>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {{ dado.grande }}
+                            {% if dado.grande > 0 %}
+                            <small class="text-muted d-block">({{ dado.grande_pct }}%)</small>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {{ dado.gigante }}
+                            {% if dado.gigante > 0 %}
+                            <small class="text-muted d-block">({{ dado.gigante_pct }}%)</small>
+                            {% endif %}
+                        </td>
+                        <td class="text-center"><strong>{{ dado.total }}</strong></td>
+                        <td>
+                            <span class="badge bg-info">{{ dado.porte_predominante }}</span>
+                            <small class="text-muted d-block">({{ dado.percentual_predominante }}%)</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Análise de Tendências -->
+{% if analise_tendencias %}
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">Análise de Tendências</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Insights Principais:</h6>
+                <ul class="list-unstyled">
+                    {% for insight in analise_tendencias.insights %}
+                    <li class="mb-2">
+                        <i class="fas fa-lightbulb text-warning me-2"></i>
+                        {{ insight }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6>Recomendações:</h6>
+                <ul class="list-unstyled">
+                    {% for recomendacao in analise_tendencias.recomendacoes %}
+                    <li class="mb-2">
+                        <i class="fas fa-arrow-right text-success me-2"></i>
+                        {{ recomendacao }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Comparativo por Período -->
+{% if comparativo_periodo %}
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">Evolução dos Portes ao Longo do Tempo</h5>
+    </div>
+    <div class="card-body">
+        <canvas id="evolucaoPortesChart" height="100"></canvas>
+    </div>
+</div>
+{% endif %}
+
+<div class="text-center mt-4">
+    <a href="{{ url_for('relatorios.index') }}" class="btn btn-secondary btn-lg">
+        <i class="fas fa-arrow-left me-2"></i>Voltar aos Relatórios
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Gráfico de Pizza - Distribuição Geral
+{% if chart_data_geral %}
+const ctxGeral = document.getElementById('portesChart').getContext('2d');
+new Chart(ctxGeral, {
+    type: 'doughnut',
+    data: {
+        labels: {{ chart_data_geral.labels|safe }},
+        datasets: [{
+            data: {{ chart_data_geral.data|safe }},
+            backgroundColor: [
+                '#339af0', // Pequeno - Azul
+                '#51cf66', // Médio - Verde  
+                '#ffd43b', // Grande - Amarelo
+                '#ff6b6b'  // Gigante - Vermelho
+            ],
+            borderColor: '#fff',
+            borderWidth: 3
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed || 0;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return `${label}: ${value} pets (${percentage}%)`;
+                    }
+                }
+            }
+        }
+    }
+});
+{% endif %}
+
+// Gráfico de Barras - Portes por Curso
+{% if chart_data_curso %}
+const ctxCurso = document.getElementById('portesCursoChart').getContext('2d');
+new Chart(ctxCurso, {
+    type: 'bar',
+    data: {
+        labels: {{ chart_data_curso.labels|safe }},
+        datasets: [
+            {
+                label: 'Pequeno',
+                data: {{ chart_data_curso.pequeno|safe }},
+                backgroundColor: '#339af0',
+                borderColor: '#1971c2',
+                borderWidth: 1
+            },
+            {
+                label: 'Médio',
+                data: {{ chart_data_curso.medio|safe }},
+                backgroundColor: '#51cf66',
+                borderColor: '#37b24d',
+                borderWidth: 1
+            },
+            {
+                label: 'Grande',
+                data: {{ chart_data_curso.grande|safe }},
+                backgroundColor: '#ffd43b',
+                borderColor: '#fab005',
+                borderWidth: 1
+            },
+            {
+                label: 'Gigante',
+                data: {{ chart_data_curso.gigante|safe }},
+                backgroundColor: '#ff6b6b',
+                borderColor: '#f03e3e',
+                borderWidth: 1
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top'
+            },
+            tooltip: {
+                mode: 'index',
+                intersect: false
+            }
+        },
+        scales: {
+            x: {
+                stacked: false
+            },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
+                }
+            }
+        }
+    }
+});
+{% endif %}
+
+// Gráfico de Evolução Temporal
+{% if comparativo_periodo %}
+const ctxEvolucao = document.getElementById('evolucaoPortesChart').getContext('2d');
+new Chart(ctxEvolucao, {
+    type: 'line',
+    data: {
+        labels: {{ comparativo_periodo.labels|safe }},
+        datasets: [
+            {
+                label: 'Pequeno',
+                data: {{ comparativo_periodo.pequeno|safe }},
+                borderColor: '#339af0',
+                backgroundColor: 'rgba(51, 154, 240, 0.1)',
+                tension: 0.4,
+                fill: false
+            },
+            {
+                label: 'Médio',
+                data: {{ comparativo_periodo.medio|safe }},
+                borderColor: '#51cf66',
+                backgroundColor: 'rgba(81, 207, 102, 0.1)',
+                tension: 0.4,
+                fill: false
+            },
+            {
+                label: 'Grande',
+                data: {{ comparativo_periodo.grande|safe }},
+                borderColor: '#ffd43b',
+                backgroundColor: 'rgba(255, 212, 59, 0.1)',
+                tension: 0.4,
+                fill: false
+            },
+            {
+                label: 'Gigante',
+                data: {{ comparativo_periodo.gigante|safe }},
+                borderColor: '#ff6b6b',
+                backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                tension: 0.4,
+                fill: false
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top'
+            },
+            tooltip: {
+                mode: 'index',
+                intersect: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
+                }
+            }
+        }
+    }
+});
+{% endif %}
+
+function exportarPDF() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('formato', 'pdf');
+    window.open('?' + params.toString(), '_blank');
+}
+</script>
+{% endblock %>}

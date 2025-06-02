@@ -1,1 +1,236 @@
- 
+<!-- templates/relatorios/especies_curso.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-chart-pie me-2"></i>Espécies por Curso</h2>
+        <p class="text-muted">Distribuição de espécies atendidas por curso</p>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label for="curso_id" class="form-label">Curso</label>
+                <select class="form-select" id="curso_id" name="curso_id">
+                    <option value="">Todos os cursos</option>
+                    {% for curso in cursos %}
+                    <option value="{{ curso.id }}" {% if request.args.get('curso_id') == curso.id|string %}selected{% endif %}>
+                        {{ curso.nome }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <label for="data_inicio" class="form-label">Data Início</label>
+                <input type="date" class="form-control" id="data_inicio" name="data_inicio" 
+                       value="{{ request.args.get('data_inicio', '') }}">
+            </div>
+            
+            <div class="col-md-3">
+                <label for="data_fim" class="form-label">Data Fim</label>
+                <input type="date" class="form-control" id="data_fim" name="data_fim" 
+                       value="{{ request.args.get('data_fim', '') }}">
+            </div>
+            
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-2"></i>Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Resultados -->
+<div class="row">
+    <!-- Gráfico -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Distribuição por Espécie</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="especiesChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tabela Resumo -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Resumo por Curso</h5>
+                <button class="btn btn-success btn-sm" onclick="exportarPDF()">
+                    <i class="fas fa-file-pdf me-1"></i>Exportar PDF
+                </button>
+            </div>
+            <div class="card-body">
+                {% if stats_especies %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Curso</th>
+                                <th>Canino</th>
+                                <th>Felino</th>
+                                <th>Outros</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in stats_especies %}
+                            <tr>
+                                <td><strong>{{ stat.curso_nome }}</strong></td>
+                                <td>
+                                    <span class="badge bg-primary">{{ stat.canino }}</span>
+                                    <small class="text-muted">({{ stat.canino_pct }}%)</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">{{ stat.felino }}</span>
+                                    <small class="text-muted">({{ stat.felino_pct }}%)</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning">{{ stat.outros }}</span>
+                                    <small class="text-muted">({{ stat.outros_pct }}%)</small>
+                                </td>
+                                <td><strong>{{ stat.total }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-active">
+                                <th>TOTAL GERAL</th>
+                                <th>{{ totais.canino }}</th>
+                                <th>{{ totais.felino }}</th>
+                                <th>{{ totais.outros }}</th>
+                                <th>{{ totais.total }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-chart-pie text-muted" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3 text-muted">Nenhum dado encontrado</h5>
+                    <p class="text-muted">Ajuste os filtros ou verifique se há atendimentos registrados</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detalhamento por Espécie -->
+{% if detalhes_especies %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Detalhamento por Espécie</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for especie, dados in detalhes_especies.items() %}
+            <div class="col-lg-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-header bg-{% if especie == 'Canino' %}primary{% elif especie == 'Felino' %}success{% else %}warning{% endif %} text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-{% if especie == 'Canino' %}paw{% elif especie == 'Felino' %}cat{% else %}star{% endif %} me-2"></i>
+                            {{ especie }}
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Total de atendimentos:</span>
+                            <span class="badge bg-dark">{{ dados.total }}</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Pets únicos:</span>
+                            <span class="badge bg-info">{{ dados.pets_unicos }}</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Média atend./pet:</span>
+                            <span class="badge bg-secondary">{{ dados.media_atendimentos|round(1) }}</span>
+                        </div>
+                        
+                        {% if dados.racas_principais %}
+                        <hr>
+                        <small class="text-muted">Raças principais:</small>
+                        <div class="mt-2">
+                            {% for raca in dados.racas_principais[:3] %}
+                            <span class="badge bg-light text-dark me-1">{{ raca.nome }} ({{ raca.count }})</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="text-center mt-4">
+    <a href="{{ url_for('relatorios.index') }}" class="btn btn-secondary btn-lg">
+        <i class="fas fa-arrow-left me-2"></i>Voltar aos Relatórios
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Gráfico de Espécies
+{% if chart_data %}
+const ctx = document.getElementById('especiesChart').getContext('2d');
+new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ chart_data.labels|safe }},
+        datasets: [{
+            data: {{ chart_data.data|safe }},
+            backgroundColor: [
+                '#339af0', // Canino - Azul
+                '#51cf66', // Felino - Verde
+                '#ffd43b'  // Outros - Amarelo
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed || 0;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return `${label}: ${value} (${percentage}%)`;
+                    }
+                }
+            }
+        }
+    }
+});
+{% endif %}
+
+function exportarPDF() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('formato', 'pdf');
+    window.open('?' + params.toString(), '_blank');
+}
+</script>
+{% endblock %}

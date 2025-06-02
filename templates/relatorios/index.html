@@ -1,1 +1,454 @@
- 
+<!-- templates/relatorios/index.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-chart-bar me-2"></i>Relatórios do Sistema</h2>
+        <p class="text-muted">Análises e estatísticas dos atendimentos realizados</p>
+    </div>
+</div>
+
+<!-- Cards de Estatísticas Rápidas -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.total_atendimentos_mes or 0 }}</h4>
+                        <p class="mb-0">Atendimentos Este Mês</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calendar-check fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.pets_diferentes or 0 }}</h4>
+                        <p class="mb-0">Pets Diferentes</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-paw fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.cursos_ativos or 0 }}</h4>
+                        <p class="mb-0">Cursos Ativos</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-graduation-cap fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.alunos_participantes or 0 }}</h4>
+                        <p class="mb-0">Alunos Participantes</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-user-graduate fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Relatórios Disponíveis -->
+<div class="row">
+    <!-- Relatórios de Atendimentos -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="fas fa-clipboard-list text-primary me-2"></i>
+                    Relatórios de Atendimentos
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('relatorios.pets_por_turma') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Pets por Turma/Aula</strong>
+                            <p class="mb-0 text-muted small">Quantos pets foram atendidos por turma, aula e curso</p>
+                        </div>
+                        <i class="fas fa-chart-bar text-primary"></i>
+                    </a>
+                    
+                    <a href="{{ url_for('relatorios.historico_pet') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Histórico do Pet</strong>
+                            <p class="mb-0 text-muted small">Histórico completo de atendimentos de um pet específico</p>
+                        </div>
+                        <i class="fas fa-history text-success"></i>
+                    </a>
+                    
+                    <a href="{{ url_for('relatorios.alunos_atendimentos') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Alunos por Atendimento</strong>
+                            <p class="mb-0 text-muted small">Quais pets um aluno específico atendeu</p>
+                        </div>
+                        <i class="fas fa-user-graduate text-info"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Relatórios de Características -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="fas fa-dna text-success me-2"></i>
+                    Análise de Características
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('relatorios.racas_curso') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Raças por Curso</strong>
+                            <p class="mb-0 text-muted small">Distribuição das raças atendidas durante os cursos</p>
+                        </div>
+                        <i class="fas fa-dna text-warning"></i>
+                    </a>
+                    
+                    <a href="{{ url_for('relatorios.portes_curso') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Portes por Curso</strong>
+                            <p class="mb-0 text-muted small">Análise dos portes dos pets por curso</p>
+                        </div>
+                        <i class="fas fa-ruler-vertical text-info"></i>
+                    </a>
+                    
+                    <a href="{{ url_for('relatorios.especies_curso') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Espécies por Curso</strong>
+                            <p class="mb-0 text-muted small">Distribuição de espécies (Canino, Felino, Outros) por curso</p>
+                        </div>
+                        <i class="fas fa-chart-pie text-danger"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Relatórios Personalizados -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-filter text-warning me-2"></i>
+            Relatório Personalizado
+        </h5>
+    </div>
+    <div class="card-body">
+        <form id="relatorioPersonalizado">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="tipo_relatorio" class="form-label">Tipo de Relatório</label>
+                    <select class="form-select" id="tipo_relatorio" name="tipo_relatorio" required>
+                        <option value="">Selecione o tipo</option>
+                        <option value="atendimentos_periodo">Atendimentos por Período</option>
+                        <option value="performance_alunos">Performance dos Alunos</option>
+                        <option value="utilizacao_cursos">Utilização dos Cursos</option>
+                        <option value="demografico_pets">Demográfico dos Pets</option>
+                        <option value="eficiencia_turmas">Eficiência das Turmas</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label for="data_inicio_custom" class="form-label">Data Início</label>
+                    <input type="date" class="form-control" id="data_inicio_custom" name="data_inicio" required>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label for="data_fim_custom" class="form-label">Data Fim</label>
+                    <input type="date" class="form-control" id="data_fim_custom" name="data_fim" required>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <label for="formato_export" class="form-label">Formato</label>
+                    <select class="form-select" id="formato_export" name="formato">
+                        <option value="pdf">PDF</option>
+                        <option value="excel">Excel</option>
+                        <option value="web">Visualizar Online</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="cursos_filtro" class="form-label">Filtrar por Cursos (opcional)</label>
+                    <select class="form-select" id="cursos_filtro" name="cursos[]" multiple>
+                        {% for curso in cursos_disponiveis %}
+                        <option value="{{ curso.id }}">{{ curso.nome }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-text text-muted">Segure Ctrl para selecionar múltiplos cursos</small>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="turmas_filtro" class="form-label">Filtrar por Turmas (opcional)</label>
+                    <select class="form-select" id="turmas_filtro" name="turmas[]" multiple>
+                        {% for turma in turmas_disponiveis %}
+                        <option value="{{ turma.id }}">{{ turma.codigo }} - {{ turma.curso.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-chart-line me-2"></i>Gerar Relatório
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Relatórios Favoritos/Recentes -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-star text-warning me-2"></i>
+                    Relatórios Favoritos
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if relatorios_favoritos %}
+                <div class="list-group list-group-flush">
+                    {% for favorito in relatorios_favoritos %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ favorito.nome }}</strong>
+                            <p class="mb-0 text-muted small">{{ favorito.descricao }}</p>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary" onclick="executarFavorito({{ favorito.id }})">
+                                <i class="fas fa-play"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="removerFavorito({{ favorito.id }})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-star text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mt-2">Nenhum relatório favoritado ainda</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock text-info me-2"></i>
+                    Relatórios Recentes
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if relatorios_recentes %}
+                <div class="list-group list-group-flush">
+                    {% for recente in relatorios_recentes %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ recente.nome }}</strong>
+                            <p class="mb-0 text-muted small">
+                                Gerado em {{ recente.data_geracao.strftime('%d/%m/%Y %H:%M') }}
+                            </p>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary" onclick="reexecutarRelatorio('{{ recente.url }}')">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-success" onclick="adicionarFavorito('{{ recente.nome }}', '{{ recente.url }}')">
+                                <i class="fas fa-star"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-clock text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mt-2">Nenhum relatório gerado recentemente</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Botões de Ação -->
+<div class="row">
+    <div class="col-12 text-center">
+        <div class="btn-group btn-group-lg">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar ao Dashboard
+            </a>
+            <button class="btn btn-primary" onclick="agendarRelatorio()">
+                <i class="fas fa-calendar-plus me-2"></i>Agendar Relatório
+            </button>
+            <button class="btn btn-info" onclick="exportarTodos()">
+                <i class="fas fa-download me-2"></i>Exportar Todos
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Configurar datas padrão (último mês)
+document.addEventListener('DOMContentLoaded', function() {
+    const hoje = new Date();
+    const umMesAtras = new Date();
+    umMesAtras.setMonth(hoje.getMonth() - 1);
+    
+    document.getElementById('data_fim_custom').value = hoje.toISOString().split('T')[0];
+    document.getElementById('data_inicio_custom').value = umMesAtras.toISOString().split('T')[0];
+});
+
+// Submissão do relatório personalizado
+document.getElementById('relatorioPersonalizado').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const params = new URLSearchParams();
+    
+    for (let [key, value] of formData.entries()) {
+        params.append(key, value);
+    }
+    
+    const tipoRelatorio = formData.get('tipo_relatorio');
+    const formato = formData.get('formato');
+    
+    // Definir URL baseado no tipo de relatório
+    let url = '/relatorios/personalizado';
+    
+    switch(tipoRelatorio) {
+        case 'atendimentos_periodo':
+            url = '/relatorios/atendimentos-periodo';
+            break;
+        case 'performance_alunos':
+            url = '/relatorios/performance-alunos';
+            break;
+        case 'utilizacao_cursos':
+            url = '/relatorios/utilizacao-cursos';
+            break;
+        case 'demografico_pets':
+            url = '/relatorios/demografico-pets';
+            break;
+        case 'eficiencia_turmas':
+            url = '/relatorios/eficiencia-turmas';
+            break;
+    }
+    
+    // Adicionar parâmetros à URL
+    url += '?' + params.toString();
+    
+    if (formato === 'web') {
+        window.location.href = url;
+    } else {
+        window.open(url, '_blank');
+    }
+});
+
+function executarFavorito(favoritoId) {
+    // Implementar execução de relatório favorito
+    fetch(`/api/relatorios/favorito/${favoritoId}/executar`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.open(data.url, '_blank');
+            } else {
+                alert('Erro ao executar relatório favorito');
+            }
+        });
+}
+
+function removerFavorito(favoritoId) {
+    if (confirm('Tem certeza que deseja remover este relatório dos favoritos?')) {
+        fetch(`/api/relatorios/favorito/${favoritoId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao remover favorito');
+            }
+        });
+    }
+}
+
+function reexecutarRelatorio(url) {
+    window.open(url, '_blank');
+}
+
+function adicionarFavorito(nome, url) {
+    fetch('/api/relatorios/favorito', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            nome: nome,
+            url: url
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Relatório adicionado aos favoritos!');
+            location.reload();
+        } else {
+            alert('Erro ao adicionar favorito');
+        }
+    });
+}
+
+function agendarRelatorio() {
+    alert('Funcionalidade de agendamento será implementada em versão futura');
+}
+
+function exportarTodos() {
+    if (confirm('Deseja exportar todos os relatórios disponíveis? Esta operação pode demorar alguns minutos.')) {
+        window.open('/relatorios/exportar-todos', '_blank');
+    }
+}
+</script>
+{% endblock %}
